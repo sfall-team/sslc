@@ -1,2 +1,3 @@
 # sslc
-Script compiler/parser for FO2/sfall scripts.
+
+Script compiler/parser for Fallout 2/sfall script.
