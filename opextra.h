@@ -8,8 +8,8 @@
 #include "oplib.h"
 
 enum {
-   // define any user-specific opcodes here, starting at O_END_LIB
-   // ending with O_END_OP
+	// define any user-specific opcodes here, starting at O_END_LIB
+	// ending with O_END_OP
 	O_GIVE_EXP_POINTS = O_END_LIB,
 	O_SCR_RETURN,
 	O_PLAY_SFX,
@@ -601,6 +601,7 @@ enum {
 	O_TS_SFALL_METARULE6,
 
 	O_TS_REGISTER_HOOK_PROC2,
+	O_TS_REG_ANIM_CALLBACK,
 
 	O_END_OP,
 };

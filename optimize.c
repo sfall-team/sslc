@@ -297,6 +297,65 @@ static int ConstantFolding(NodeList* _nodes) {
 	return matched;
 }
 
+static int isValidMathOp(int op) {
+	//           43           45           42           47
+	return op == '+' || op == '-' || op == '*' || op == '/';
+}
+
+// optimizes remaining not optimized mathematical operations (except for logical operations) | added: Fakels
+static int ConstantFoldingPassTwo(NodeList* _nodes) {
+	int i, token, _token, isStartExp = 0;
+	int nResult = 0, tokenOp = 0, isNotEquals = 0, matched = 0, nonConstant = 0;
+
+	Node* nodes = _nodes->nodes;
+	for (i = 2; i < _nodes->numNodes; i++)
+	{
+		token = nodes[i].token;
+		if (!isStartExp){
+			if (token == T_START_EXPRESSION) isStartExp = 1;
+			continue;
+		} else if (token == T_END_EXPRESSION) {
+			isStartExp = 0;
+			nonConstant = 0;
+			continue;
+		}
+		if (token == T_SYMBOL) {
+			tokenOp = 0;
+			// remember position for last non-const symbol
+			if (nodes[i + 2].token != '+') nonConstant = i + 1; // skip for 'T_SYMBOL + a'
+			continue;
+		}
+		if (token == T_CONSTANT && nodes[i].value.type != V_STRING && (nonConstant == 0 || nonConstant < i)) {
+			_token = nodes[i + 1].token;
+			if (!isValidMathOp(_token)) {
+				tokenOp = 0;
+				continue;
+			}
+			if (!tokenOp) {
+				tokenOp = _token;
+				nResult = i;
+				continue;
+			}
+			if (tokenOp != _token) {
+				isNotEquals = 1;
+				if (tokenOp == '+' && _token == '-') isNotEquals = 0; // exclusion for 'a + b - c'
+			}
+			if (!isNotEquals) {
+				parseMessageAtNode(&nodes[i + 1], "Pass two: Folding constant mathematics expression");
+				PerformConstOp(&nodes[nResult].value, &nodes[i].value, &nodes[nResult].value, _token, &nodes[i + 1]);
+				RemoveNodes(_nodes, i, 2);
+				i -= 2;
+				matched = 1;
+			} else {
+				isNotEquals = 0;
+			}
+			tokenOp = 0;
+			i--;
+		}
+	}
+	return matched;
+}
+
 static int ConstantPropagateExpression(Node* nodes, Variable* vars, Value* values, int varCount, int *_i) {
 	int expressiondepth = 1, matched = 0, token, var, i = *_i;
 	assert(nodes[i].token == T_START_EXPRESSION);
@@ -739,6 +798,9 @@ static void OptimizeProcedure(Procedure* proc) {
 		found |= DeadCodeRemoval(&proc->nodes);
 		found |= Combine(&proc->nodes);
 	} while (found);
+#ifdef _DEBUG
+	while (ConstantFoldingPassTwo(&proc->nodes)); // Additional optimization passes
+#endif
 	if (hasVars) {
 		DeadVariableRemoval(&proc->nodes, &proc->variables, proc->numArgs); //use this twice so that VariableReuse has no completely dead variables to worry about
 		if (optimize >= 3) { // variable reuse is known to break code
