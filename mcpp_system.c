@@ -221,7 +221,10 @@ void    init_system( void)
 #define OPTLISTLEN  80
 
 void    do_options(
-	const char* dir
+    const char* dir,
+    const char* def,
+    const char* include_dir,
+    const char* second_dir
 )
 /*
  * Process command line arguments, called only at MCPP startup.
@@ -245,8 +248,11 @@ void    do_options(
     sprintf( cur_work_dir + strlen( cur_work_dir), "%c%c", PATH_DELIM, EOS);
         /* Append trailing path-delimiter   */
 
-	if (dir)
-		set_a_dir(dir);
+    if (dir) set_a_dir(dir);
+    if (include_dir) set_a_dir(include_dir);
+    if (second_dir) set_a_dir(second_dir);
+    /* define macros */
+    if (def) def_list[def_cnt++] = (char*)def;
 
     /* Check consistency of specified options, set some variables   */
     chk_opts( sflag, trad);
@@ -898,7 +904,13 @@ static int  open_include(
         has_dir = has_dir_src || has_dir_fname
                 || (**(infile->dirp) != EOS);
     }
-
+#ifdef BUILDING_DLL     /* Reordered search include files for DLL (Fakels) */
+    if (full_path) {
+        if (open_file( &null, NULL, filename, FALSE, FALSE, FALSE))
+            return  TRUE;
+        return  FALSE;
+    }
+#else
     if ((searchlocal && ((search_rule & CURRENT) || !has_dir)) || full_path) {
         /*
          * Look in local directory first.
@@ -910,7 +922,7 @@ static int  open_include(
         if (full_path)
             return  FALSE;
     }
-
+#endif
     if (searchlocal && (search_rule & SOURCE) && has_dir) {
         /*
          * Look in local directory of source file.
@@ -924,6 +936,16 @@ static int  open_include(
     if (search_dir( filename, searchlocal, next))
         return  TRUE;
 
+#ifdef BUILDING_DLL     /* Reordered search include files for DLL (Fakels) */
+    if ((searchlocal && ((search_rule & CURRENT) || !has_dir))) {
+        /*
+         * Look in local directory.
+         * Try to open filename relative to the "current directory".
+         */
+        if (open_file( &null, NULL, filename, searchlocal, FALSE, FALSE))
+            return  TRUE;
+    }
+#endif
     return  FALSE;
 }
 
@@ -1219,13 +1241,13 @@ static void cur_file(
     if (sharp_file) {                       /* Main input file  */
         name = file->filename;
     } else if (str_eq( file->filename, file->real_fname)) {
-		// sfall: added
-		if (preprocess_fullpath) {    // 
-			name = file->full_fname;  // 
-		} else { // end of added
-			sprintf( work_buf, "%s%s", *(file->dirp), cur_fname);
-			name = work_buf;
-		}
+        // sfall: added
+        if (preprocess_fullpath) {    // 
+            name = file->full_fname;  // 
+        } else { // end of added
+            sprintf( work_buf, "%s%s", *(file->dirp), cur_fname);
+            name = work_buf;
+        }
     } else {            /* Changed by '#line fname' directive   */
         name = file->filename;
     }

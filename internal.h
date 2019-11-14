@@ -454,7 +454,7 @@ extern int mcpp_fputs(const char *s, OUTDEST od);
 extern int mcpp_fprintf( OUTDEST od, const char *format, ...);
 
 /* system.c */
-extern void     do_options();
+extern void     do_options(const char* dir, const char* def, const char* include_dir, const char* second_dir);
                 /* Process command line args    */
 extern void     init_sys_macro( void);
                 /* Define system-specific macro */

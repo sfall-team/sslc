@@ -7,10 +7,15 @@
 #include "parse.h"
 #include <io.h>
 
+#ifdef BUILDING_DLL
+int optimize = 0;
+#else
+int optimize = 1; // default for exe
+#endif
+
 int noinputwait = 0;
 int warnings = 1;
 int backwardcompat = 0;
-int optimize = 0;
 int debug = 0;
 int preprocess_fullpath = 0;
 int dumpTree = 0;
@@ -32,14 +37,19 @@ FILE *parseroutput;
 
 static void PrintLogo() {
 	parseOutput("Startreck scripting language compiler (Fallout 2 sfall edition 4.2)\n\n"
+#ifndef WIN2K
 		"Preprocessing handled by mcpp 2.7.2\n"
 		"Copyright (c) 1998, 2002-2008 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>\n"
-		"All rights reserved.\n\n");
+		"All rights reserved.\n\n"
+#else
+		"Win2K/Lite version (no built-in preprocessor)\n\n"
+#endif
+	);
 }
 
 extern int warn_level; //the mcpp warning level
-extern int mcpp_lib_main(FILE *fin, FILE *fout, const char* in_file, const char* dir);
-//extern void set_a_dir(const char * dirname);
+extern int mcpp_lib_main(FILE *fin, FILE *fout, const char* in_file, const char* dir, const char* def, const char* include_dir);
+extern void mcpp_add_include_dir(char*);
 
 #ifndef BUILDING_DLL
 int main(int argc, char **argv)
@@ -52,6 +62,8 @@ int main(int argc, char **argv)
 	int preprocess=0;
 	int onlypreprocess=0;
 
+	char* includeDir = NULL, *defMacro = NULL;
+
 	if (argc < 2) {
 		PrintLogo();
 		parseOutput("Usage: compile {switches} filename [-o outputname] [filename [..]]\n");
@@ -59,13 +71,19 @@ int main(int argc, char **argv)
 		parseOutput("  -n    no warnings\n");
 		parseOutput("  -b    use backward compatibility mode\n");
 		parseOutput("  -l    no logo\n");
+#ifndef WIN2K
 		parseOutput("  -p    preprocess\n");
 		parseOutput("  -P    preprocess only. (Don't generate .int)\n");
 		parseOutput("  -F    write full file paths in #line directives\n");
-		parseOutput("  -O<level>    optimize (0 - none, 1 - only remove unreferenced globals, 2 - full, 3 - full+experimental, don't use!)\n");
+#endif
+		parseOutput("  -O<level> optimize (0 - none, 1 - only remove unreferenced globals (default), 2 - full, 3 - full+experimental, don't use!)\n");
 		parseOutput("  -d    show debug info\n");
 		parseOutput("  -s    enable short-circuit evaluation for boolean operators (AND, OR)\n");
 		parseOutput("  -D    dump abstract syntax tree after optimizations\n");
+#ifndef WIN2K
+		parseOutput("  -m<macro[=val]> define a macro named \"macro\" for conditional compilation\n");
+		parseOutput("  -I<path> specify an additional directory to search for include files\n");
+#endif
 		return 1;
 	}
 
@@ -87,13 +105,14 @@ int main(int argc, char **argv)
 		case 'b':
 			backwardcompat = 1;
 			break;
-	    case 'l':
+		case 'l':
 			nologo=1;
 			break;
 		case 'O':
-			if (strlen(argv[1]) == 2) optimize = 2;
+			if (strlen(argv[1]) == 2) optimize = 2; // full
 			else optimize = atoi(&argv[1][2]);
 			break;
+#ifndef WIN2K
 		case 'P':
 			onlypreprocess = 1;
 		case 'p':
@@ -102,12 +121,24 @@ int main(int argc, char **argv)
 		case 'F':
 			preprocess_fullpath = 1;
 			break;
+#endif
 		case 'D':
 			dumpTree = 1;
 			break;
 		case 's':
 			shortCircuit = 1;
 			break;
+#ifndef WIN2K
+		case 'm':
+			defMacro = &argv[1][2];
+			break;
+		case 'I':
+			if (!includeDir)
+				includeDir = &argv[1][2];
+			else
+				mcpp_add_include_dir(&argv[1][2]);
+			break;
+#endif
 		default:
 			parseOutput("Unknown option %c\n", argv[1][1]);
 		}
@@ -115,7 +146,7 @@ int main(int argc, char **argv)
 		argv++;
 		argc--;
 	}
-
+	// disabled - Fakels
 	/*if(backwardcompat&&(optimize||preprocess)) {
 		parseOutput("Invalid option combination; cannot run preprocess or optimization passes in backward compatibility mode\n");
 		return -1;
@@ -124,7 +155,10 @@ int main(int argc, char **argv)
 	if(!nologo) PrintLogo();
 
 	compilerErrorTotal = 0;
-
+#ifndef WIN2K
+	if (defMacro) parseOutput("Define macro: %s\n", defMacro);
+	if (includeDir) parseOutput("Set include directory: %s\n", includeDir);
+#endif
 	while(argv[1]) {
 		file = argv[1];
 		argv++;
@@ -173,7 +207,7 @@ int main(int argc, char **argv)
 						}
 					}
 				}
-
+#ifndef WIN2K
 				if(preprocess) {
 					FILE *newfile;
 					unsigned int letters;
@@ -190,7 +224,7 @@ int main(int argc, char **argv)
 						newfile=fopen(tmpbuf, "w+DT");
 //#endif
 					}
-					if(mcpp_lib_main(foo.file, newfile, buf.name, buf.name)) {
+					if(mcpp_lib_main(foo.file, newfile, buf.name, buf.name, defMacro, includeDir)) {
 						parseOutput("*** An error occured during preprocessing of %s ***\n", buf.name);
 						return 1;
 					}
@@ -198,6 +232,7 @@ int main(int argc, char **argv)
 					rewind(newfile);
 					foo.file=newfile;
 				}
+#endif
 				if(!onlypreprocess) {
 					parse(&foo, name);
 					freeCurrentProgram();
@@ -214,8 +249,7 @@ int main(int argc, char **argv)
 					getchar();
 				return 1;
 			}
-		}
-		else  {
+		} else {
 			parseOutput("Warning: %s not found\n", file);
 		}
 	}
@@ -226,8 +260,8 @@ int main(int argc, char **argv)
 #ifdef BUILDING_DLL
 
 static int inited=0;
-
-int _stdcall parse_main(const char *filePath, const char* origPath, const char* dir, int backMode) {
+// old parser
+int _stdcall parse_main(const char *filePath, const char* origPath, const char* dir/*, const char* def, const char* include_dir, int backMode*/) {
 	InputStream foo;
 	char tmpbuf[260];
 	//char cwd[1024];
@@ -239,12 +273,12 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 		FreeFileNames();
 		inited=0;
 	}
-
+/*
 	if (backMode) {
 		backwardcompat = 1;
 		lexClear();
 	}
-
+*/
 	foo.name=AddFileName(origPath);
 	foo.file = fopen(filePath, "r");
 
@@ -258,7 +292,7 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 	compilerErrorTotal = 0;
 	compilerSyntaxError = 0;
 	preprocess_fullpath = 1;
-	if (mcpp_lib_main(foo.file, newfile, origPath, dir)) {
+	if (mcpp_lib_main(foo.file, newfile, origPath, dir, NULL, NULL)) { // prevent crash in old Script Editor - NR
 		fclose(foo.file);
 		fclose(newfile);
 		if (parseroutput)

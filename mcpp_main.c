@@ -250,6 +250,12 @@ static void     devide_line( char * out);
 static void     put_a_line( char * out);
                 /* Put out the processed line       */
 
+static char* second_include_dir = NULL;
+void mcpp_add_include_dir(char* dir) /* added - Fakels */
+{
+	second_include_dir = dir;
+}
+
 static void     init_main( void)
 /* Initialize global variables on re-entering.  */
 {
@@ -274,7 +280,9 @@ int     mcpp_lib_main
     FILE *fin,
 	FILE *fout,
 	const char* in_file,
-	const char* dir
+	const char* dir,
+	const char* def,
+	const char* include_dir
 )
 {
     const char *  stdin_name = "<stdin>";
@@ -303,7 +311,7 @@ int     mcpp_lib_main
     inc_dirp = &null;   /* Initialize to current (null) directory   */
     cur_fname = cur_fullname = "(predefined)";  /* For predefined macros    */
     init_defines();                         /* Predefine macros     */
-    do_options(dir);   /* Command line options */
+    do_options(dir, def, include_dir, second_include_dir);   /* Command line options */
 
     init_sys_macro();       /* Initialize system-specific macros    */
     add_file( fp_in, NULL, in_file, in_file, FALSE);
