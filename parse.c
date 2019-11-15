@@ -118,8 +118,10 @@ void parseMessageAtNode(const Node* node, const char *format, ...) {
 
 	va_start(arg, format);
 	i = vsprintf(buf, format, arg);
-	if(node) parseOutput("[Message] <%s>:%d:%d: %s\n", lexGetFilename(currentInputStream), node->lineNum, node->column, buf);
-	else parseOutput("[Message] <none>:%d: %s\n", -1, buf);
+	if (node)
+		parseOutput("[Message] <%s>:%d:%d: %s\n", lexGetFilename(currentInputStream), node->lineNum, node->column, buf);
+	else
+		parseOutput("[Message] <none>:%d: %s\n", -1, buf);
 	va_end(arg);
 }
 
@@ -132,8 +134,10 @@ void parseWarningAtNode(const Node* node, const char *format, ...) {
 
 	va_start(arg, format);
 	i = vsprintf(buf, format, arg);
-	if(node) parseOutput("[Warning] <%s>:%d:%d: %s\n", lexGetFilename(currentInputStream), node->lineNum, node->column, buf);
-	else parseOutput("[Warning] <none>:%d: %s\n", -1, buf);
+	if (node)
+		parseOutput("[Warning] <%s>:%d:%d: %s\n", lexGetFilename(currentInputStream), node->lineNum, node->column, buf);
+	else
+		parseOutput("[Warning] <none>:%d: %s\n", -1, buf);
 	va_end(arg);
 }
 
@@ -177,8 +181,10 @@ void parseErrorAtNode(const Node* node, const char *format, ...) {
 
 	va_start(arg, format);
 	i = vsprintf(buf, format, arg);
-	if(node) parseOutput("[Error] <%s>:%d:%d: %s\n", lexGetFilename(currentInputStream), node->lineNum, node->column, buf);
-	else parseOutput("[Error] <none>:%d: %s\n", -1, buf);
+	if (node)
+		parseOutput("[Error] <%s>:%d:%d: %s\n", lexGetFilename(currentInputStream), node->lineNum, node->column, buf);
+	else
+		parseOutput("[Error] <none>:%d: %s\n", -1, buf);
 	va_end(arg);
 
 	compilerErrorTotal++;
@@ -1763,7 +1769,7 @@ int procedure(void) {
 
 	if (p->deftype == 1) {
 		if (p->numArgs != numArgs) {
-			parseSemanticError("Wrong number of arguments to procedure %s\n",
+			parseError("Wrong number of arguments to procedure %s\n",
 					getName(p->name, currentProgram->namelist));
 		} else if (numArgs != minArgs) {
 			parseSemanticError("Default argument values are not allowed for a forward-declared procedure: %s\n",
