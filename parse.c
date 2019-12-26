@@ -1431,10 +1431,27 @@ void parseExpGroup(Procedure *p, NodeList *nodes, int num) {
 	}
 }
 
-
+// search order is:
+//  local variables
+//  global procedures
+//  global variables
+//  external variables
+static int FindSymbolName(Procedure *p, LexData *data) {
+	int type = P_LOCAL;
+	if (findVariableIndex(data->stringData, &p->variables, p->namelist) == -1) {
+		if (findProcedureIndex(&currentProgram->procedures, &currentProgram->namelist, data->stringData) == -1) {
+			if (findVariableIndex(data->stringData, &currentProgram->variables, currentProgram->namelist) == -1) {
+				type = P_GLOBAL;
+				if (findVariableIndex(data->stringData, &currentProgram->externals, currentProgram->namelist) == -1) {
+					return 0;
+				}
+			}
+		}
+	}
+	return 1; // found
+}
 
 // Parse a statement from the input stream.
-
 static void parseStatementInternal(Procedure *p, char requireSemicolon) {
 	int i, inlinedEvent = 0;
 	NodeList *nodes;
@@ -1524,10 +1541,13 @@ static void parseStatementInternal(Procedure *p, char requireSemicolon) {
 					emitOp(p, &p->nodes, T_END_EXPRESSION);
 					break;
 				default:
-					parseError("Assignment operator expected.");
+					if (FindSymbolName(p, &lexData))
+						parseError("Assignment operator expected.");
+					else
+						parseSemanticError("Unknown identifier %s.", lexData.stringData);
 				}
 				break;
-						   }
+			}
 			case T_CALL:
 				inlinedEvent = parseEvent(p, &p->nodes);
 				break;
