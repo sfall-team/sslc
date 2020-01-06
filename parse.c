@@ -1196,7 +1196,7 @@ static void logical_prime(Procedure *p, NodeList *nodes) {
 	int i;
 
 	i = lex();
-	if (i == T_AND || i == T_OR) {
+	if (i == T_AND_ALSO || i == T_OR_ELSE || i == T_AND || i == T_OR) {
 		/* old logic:
 		compare_expression(p, nodes);
 		emitOp(p, nodes, i);
@@ -1945,8 +1945,12 @@ void dumpNodes(Procedure* p, NodeList* nodes, FILE* f) {
 			indentstr[++indent] = 0;
 			break;
 		case T_END_STATEMENT:
+			indentstr[--indent] = 0;
+			fprintf(f, "END STATEMENT");
+			break;
 		case T_END_EXPRESSION:
 			indentstr[--indent] = 0;
+			fprintf(f, "END EXPRESSION");
 			break;
 		case T_SYMBOL:
 			fprintf(f, "symbol %d", node.value.intData);

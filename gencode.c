@@ -248,7 +248,7 @@ int writeNode(NodeList *n, int i, FILE *f) {
 		int args;
 		i = writeCallFunc(n, i, f, &args);
 		break;
-					  }
+	}
 	case T_CONSTANT:
 		switch(n->nodes[i].value.type) {
 		case V_STRING: writeString(n->nodes[i].value.stringData, f); break;
@@ -295,12 +295,19 @@ int writeNode(NodeList *n, int i, FILE *f) {
 		i = writeExpression(n, i, f); // expr if false
 		patchOffset(outAdr + OPCODE_SIZE, outputTell(f), f);
 		break;
-			   }
+	}
+	case T_AND_ALSO:
+		n->nodes[i].token = T_AND;
+		goto shCircuit;
+	case T_OR_ELSE:
+		n->nodes[i].token = T_OR;
+		goto shCircuit;
 	case T_AND:
 	case T_OR: {
 		// this is encountered after left argument expression was written, so we have it's result on stack top
 		if (shortCircuit) { // phobos2077 - short circuit evaluation of logical operators
 			int skipAddr;
+shCircuit:
 			writeOp(O_DUP, f);   // duplicate expr result, if it is 0, this value will be used as result of AND
 			skipAddr = outputTell(f);
 			writeInt(0, f);      // address for O_IF
@@ -318,7 +325,7 @@ int writeNode(NodeList *n, int i, FILE *f) {
 			writeOp((tok == T_AND) ? O_AND : O_OR, f);
 		}
 		break;
-			}
+	}
 	default: {
 		switch(n->nodes[i].token) {
 		case T_BWNOT: writeOp(O_BWNOT, f); i++; break;
@@ -345,7 +352,7 @@ int writeNode(NodeList *n, int i, FILE *f) {
 		default: i = writeLibExpression(n, i, f); break;
 		}
 		break;
-			 }
+	}
 	}
 	return i;
 }
@@ -547,7 +554,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 
 			writeOp(O_CALL_AT, f);
 			break;
-						}
+		}
 		case T_CALL_CONDITION: {
 			int addr = outputTell(f), proc, cond, flag = 0;
 
@@ -602,7 +609,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			}
 			writeOp(O_CALL_CONDITION, f);
 			break;
-							   }
+		}
 		case T_CALL: {
 			int ret = outputTell(f), proc;
 			int args = 0;
@@ -652,7 +659,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 				parseError("Internal error, no ending event.");
 			i++;
 			break;
-					 }
+		}
 		case T_IF: {
 			int true, false, j;
 
@@ -696,7 +703,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			}
 
 			break;
-				   }
+		}
 		case T_WHILE: {
 			int false, top, j, pos;
 
@@ -734,7 +741,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			loopStackPos--;
 
 			break;
-					  }
+		}
 		case T_ASSIGN_ADD:
 		case T_ASSIGN_MUL:
 		case T_ASSIGN_SUB:
@@ -779,7 +786,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 				writeOp(O_STORE_EXTERNAL, f);
 			}
 			break;
-						   }
+		}
 		case T_ASSIGN: {
 			int j = i-1;
 			i = writeExpression(n, i+1, f);
@@ -797,16 +804,16 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			}
 			else parseError("Error, unknown type for symbol %x\n", n->nodes[j].value.type);
 			break;
-					   }
-					   EXP(WAIT, 1);
-					   EXP(FORK, 1);
-					   EXP(SPAWN, 1);
-					   EXP(CALLSTART, 1);
-					   EXP(EXEC, 1);
-					   EXP(DETACH, 0);
-					   EXP(EXIT, 0);
-					   EXP(STARTCRITICAL, 0);
-					   EXP(ENDCRITICAL, 0);
+		}
+			EXP(WAIT, 1);
+			EXP(FORK, 1);
+			EXP(SPAWN, 1);
+			EXP(CALLSTART, 1);
+			EXP(EXEC, 1);
+			EXP(DETACH, 0);
+			EXP(EXIT, 0);
+			EXP(STARTCRITICAL, 0);
+			EXP(ENDCRITICAL, 0);
 		case T_RETURN: {
 			int value = 0;
 
@@ -832,7 +839,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 
 			writeOp(O_POP_RETURN, f);
 			break;
-					   }
+		}
 		case T_CONTINUE:
 			loopStack[loopStackPos].numContinue++;
 			continueStack[++continueStackPos] = outputTell(f); // address will be patched to point to end of loop for FOR and FOREACH loops
@@ -855,7 +862,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			}
 			loopStack[loopStackPos].numContinue = 0;
 			i++;
-						 }
+		}
 			break;
 		default: i = writeLibStatement(n, i, f); break;
 		}

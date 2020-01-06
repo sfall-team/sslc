@@ -11,7 +11,7 @@ BEGIN
 		VALUE "FileDescription", "Fallout SSL script compiler"
 		VALUE "FileVersion", VERSION_STRING
 		VALUE "InternalName", "sslc"
-		//VALUE "LegalCopyright", "Copyright (C) 2019"
+		//VALUE "LegalCopyright", "Copyright (C) 2020"
 		VALUE "OriginalFilename", FILE_STRING
 		VALUE "ProductName", "sslc"
 		VALUE "ProductVersion", VERSION_STRING

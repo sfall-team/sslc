@@ -194,6 +194,8 @@ void initLex(void) {
 		//tokens[T_IN]         = "in";
 		tokens[T_BREAK]     = "break";
 		tokens[T_CONTINUE]  = "continue";
+		tokens[T_AND_ALSO]  = "andalso";
+		tokens[T_OR_ELSE]   = "orelse";
 	}
 	tokens[T_INCLUDE]   = "include";
 	tokens[T_STARTCRITICAL] = "startcritical";

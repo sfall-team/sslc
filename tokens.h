@@ -37,13 +37,13 @@ enum { T_PROCEDURE=256,  // begin keywords
 	T_DEFAULT,
 	T_WHILE,
 	T_DO,
-		// new tokens, loops extensions:
+	// new tokens, loops extensions:
 	T_FOR,
 	T_FOREACH,
 	T_BREAK,
 	T_CONTINUE,
 	T_LOOP_END, // used by code generator to implement proper "continue"
-		// end of new tokens
+	// end of new tokens
 	T_RETURN,
 	T_INCLUDE,
 
@@ -86,6 +86,9 @@ enum { T_PROCEDURE=256,  // begin keywords
 
 	T_STARTCRITICAL,
 	T_ENDCRITICAL,
+
+	T_AND_ALSO, // new
+	T_OR_ELSE,  // new
 
 	T_EOF,
 	T_END_CORE,
