@@ -291,6 +291,11 @@ static int expect(int what, int hit, int miss) {
 	else { ungetChar(); return miss; }
 }
 
+/* added for alternative assignment operator '=' */
+static int expectAssign(int what, int hit, int miss) {
+	return (getChar() == what) ? hit : miss;
+}
+
 static int validSymbolChar(int c) {
 	return (c >= 'a' && c <= 'z') ||
 		(c >= 'A' && c <= 'Z') ||
@@ -674,59 +679,63 @@ top:
 		ret = T_CONSTANT;
 		break;
 
+/* added for alternative assignment operator '=' */
+#define EXPECT_ASSIGN(c, x, y, z) case x: ret = expectAssign(x, y, z); break;
+		EXPECT_ASSIGN('=', '=', T_EQUAL, T_ASSIGN);
+
 #define EXPECT(x, y, z) case x: ret = expect(y, z, x); break;
 		EXPECT(':', '=', T_ASSIGN);
-		EXPECT('=', '=', T_EQUAL);
+//		EXPECT('=', '=', T_EQUAL);
 		EXPECT('>', '=', T_GREATER_EQUAL);
 		EXPECT('<', '=', T_LESS_EQUAL);
 		EXPECT('!', '=', T_NOT_EQUAL);
 
-case '+':
-	if(expect('=', T_ASSIGN_ADD, 0)) ret=T_ASSIGN_ADD;
-	else if(expect('+', T_INC, 0)) ret=T_INC;
-	else ret='+';
-	break;
-case '-':
-	if (expect('=', T_ASSIGN_SUB, 0)) ret=T_ASSIGN_SUB;
-	else if (expect('-', T_DEC, 0)) ret=T_DEC;
-	/*else {
-		int c = getChar();
-		if (validNumberChar(c)) {
-			ungetChar();
-			parseNumber();
-			if (lexData.type == T_FLOAT)
-				lexData.floatData = -lexData.floatData;
-			else
-				lexData.intData = -lexData.intData;
-			ret = T_CONSTANT;
-		} else {
-			ungetChar();
-			ret='-';
-		}
-	}*/
-	else ret='-';
-	break;
-
-	EXPECT('*', '=', T_ASSIGN_MUL);
-
-case '{': case '}':
-case '(': case ')':
-case ';': case ',': case '%':
-case '^': // sfall
-case '[': case ']':
-	ret = c;
-	break;
-case '@':
-	if(expect('"', 1, 0)) {
-		parseString(buf[which], 1);
-		ret = T_CONSTANT;
+	case '+':
+		if (expect('=', T_ASSIGN_ADD, 0)) ret = T_ASSIGN_ADD;
+		else if (expect('+', T_INC, 0)) ret = T_INC;
+		else ret = '+';
 		break;
-	} else {
+	case '-':
+		if (expect('=', T_ASSIGN_SUB, 0)) ret = T_ASSIGN_SUB;
+		else if (expect('-', T_DEC, 0)) ret = T_DEC;
+		/*else {
+			int c = getChar();
+			if (validNumberChar(c)) {
+				ungetChar();
+				parseNumber();
+				if (lexData.type == T_FLOAT)
+					lexData.floatData = -lexData.floatData;
+				else
+					lexData.intData = -lexData.intData;
+				ret = T_CONSTANT;
+			} else {
+				ungetChar();
+				ret='-';
+			}
+		}*/
+		else ret='-';
+		break;
+
+		EXPECT('*', '=', T_ASSIGN_MUL);
+
+	case '{': case '}':
+	case '(': case ')':
+	case ';': case ',': case '%':
+	case '^': // sfall
+	case '[': case ']':
 		ret = c;
 		break;
-	}
-default:
-	i = 0;
+	case '@':
+		if(expect('"', 1, 0)) {
+			parseString(buf[which], 1);
+			ret = T_CONSTANT;
+			break;
+		} else {
+			ret = c;
+			break;
+		}
+	default:
+		i = 0;
 
 	do {
 		buf[which][i++] = c;
