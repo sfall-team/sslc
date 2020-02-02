@@ -90,6 +90,8 @@ enum { T_PROCEDURE=256,  // begin keywords
 	T_AND_ALSO, // new
 	T_OR_ELSE,  // new
 
+	T_DIV2,
+
 	T_EOF,
 	T_END_CORE,
 };

@@ -603,6 +603,8 @@ enum {
 	O_TS_REGISTER_HOOK_PROC2,
 	O_TS_REG_ANIM_CALLBACK,
 
+	O_TS_DIV, // used for unsigned integer division
+
 	O_END_OP,
 };
 

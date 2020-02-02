@@ -1135,12 +1135,12 @@ static void factor(Procedure *p, NodeList *nodes) {
 static void term_prime(Procedure *p, NodeList *nodes) {
 	int i = lex();
 
-	if (i == '*' || i == '/' || i == '%' || i == '^') { // sfall: added ^
+	if (i == '*' || i == '/' || i == '%' || i == T_DIV2 || i == '^') { // sfall: added '^', 'div'
 		Node *node;
 		//      term(p, nodes);
 		factor(p, nodes);
 		node = &nodes->nodes[nodes->numNodes - 1];
-		if ((i == '/' || i == '%') && node->token == T_CONSTANT && node->value.type != V_STRING && node->value.intData == 0) {
+		if ((i == '/' || i == '%' || i == T_DIV2) && node->token == T_CONSTANT && node->value.type != V_STRING && node->value.intData == 0) {
 			parseSemanticError("Division by zero!");
 		}
 		emitOp(p, nodes, i);

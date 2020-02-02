@@ -341,9 +341,10 @@ shCircuit:
 		case '*': writeOp(O_MUL, f); i++; break;
 		case '/': writeOp(O_DIV, f); i++; break;
 		case '%': writeOp(O_MOD, f); i++; break;
-		case '^': writeOp(O_TS_POW, f); i++; break; // sfall
-		//case T_AND: writeOp(O_AND, f); i++; break; // pbs - removed
-		//case T_OR: writeOp(O_OR, f); i++; break; // pbs - removed
+		case '^': writeOp(O_TS_POW, f); i++; break;    // sfall
+		case T_DIV2: writeOp(O_TS_DIV, f); i++; break; // sfall
+		//case T_AND: writeOp(O_AND, f); i++; break;   // pbs - removed
+		//case T_OR: writeOp(O_OR, f); i++; break;     // pbs - removed
 		case T_BWAND: writeOp(O_BWAND, f); i++; break;
 		case T_BWOR: writeOp(O_BWOR, f); i++; break;
 		case T_NOT: writeOp(O_NOT, f); i++; break;

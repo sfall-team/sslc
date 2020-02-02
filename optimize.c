@@ -14,6 +14,7 @@
 #define F_OP(token,op)  case token: out->floatData = fd1 op fd2; break;
 #define F_IOP(token,op) case token: out->type = V_INT; out->intData = fd1 op fd2; break;
 #define I_OP(token,op)  case token: out->intData = in1->intData op in2->intData; break;
+#define I_OPU(token,op) case token: out->intData = (unsigned int)in1->intData op (unsigned int)in2->intData; break;
 
 #define VU_FIRST_ASSIGN_IS_PURE  0x01
 #define VU_FIRST_ASSIGN_IN_WHILE 0x02
@@ -164,8 +165,9 @@ static void FindVarUsage(const Node* node, VarUsage* usage, int varCount) {
 }
 
 static int isValidBinaryOp(int op) {
-	return op == '+' || op == '-' || op == '*' || op == '/' || op == T_AND || op == T_OR || op == T_BWAND || op == T_BWOR || op == T_BWXOR ||
-		op == '>' || op == '<' || op == T_EQUAL || op == T_NOT_EQUAL || op == T_LESS_EQUAL || op == T_GREATER_EQUAL;
+	return op == '+' || op == '-' || op == '*' || op == '/' || op == T_DIV2 ||
+		   op == T_AND || op == T_OR || op == T_BWAND || op == T_BWOR || op == T_BWXOR ||
+		   op == '>' || op == '<' || op == T_EQUAL || op == T_NOT_EQUAL || op == T_LESS_EQUAL || op == T_GREATER_EQUAL;
 }
 
 //Calculate the result of a constant operation (doesn't handle strings, which would require namespace modifications)
@@ -184,6 +186,7 @@ static void PerformConstOp(const Value* in1, const Value* in2, Value* out, int o
 			F_OP('-', -)
 			F_OP('*', *)
 			F_OP('/', /)
+			F_OP(T_DIV2, /)
 			F_IOP(T_EQUAL, ==)
 			F_IOP(T_NOT_EQUAL, !=)
 			F_IOP('>', >)
@@ -221,6 +224,7 @@ static void PerformConstOp(const Value* in1, const Value* in2, Value* out, int o
 			I_OP('-', -)
 			I_OP('*', *)
 			I_OP('/', /)
+			I_OPU(T_DIV2, /)
 			I_OP(T_AND, &&)
 			I_OP(T_OR, ||)
 			I_OP(T_BWAND, &)
@@ -299,7 +303,7 @@ static int ConstantFolding(NodeList* _nodes) {
 
 static int isValidMathOp(int op) {
 	//           43           45           42           47
-	return op == '+' || op == '-' || op == '*' || op == '/';
+	return op == '+' || op == '-' || op == '*' || op == '/'; // | op == T_DIV2
 }
 
 // optimizes remaining not optimized mathematical operations (except for logical operations) | added: Fakels

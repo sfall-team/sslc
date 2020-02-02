@@ -191,11 +191,11 @@ void initLex(void) {
 	if(backwardcompat == 0) {
 		tokens[T_FOR]       = "for";
 		tokens[T_FOREACH]   = "foreach";
-		//tokens[T_IN]         = "in";
 		tokens[T_BREAK]     = "break";
 		tokens[T_CONTINUE]  = "continue";
 		tokens[T_AND_ALSO]  = "andalso";
 		tokens[T_OR_ELSE]   = "orelse";
+		tokens[T_DIV2]      = "div";
 	}
 	tokens[T_INCLUDE]   = "include";
 	tokens[T_STARTCRITICAL] = "startcritical";
@@ -289,11 +289,6 @@ static int expect(int what, int hit, int miss) {
 	int c = getChar();
 	if (c == what) return hit;
 	else { ungetChar(); return miss; }
-}
-
-/* added for alternative assignment operator '=' */
-static int expectAssign(int what, int hit, int miss) {
-	return (getChar() == what) ? hit : miss;
 }
 
 static int validSymbolChar(int c) {
@@ -680,12 +675,12 @@ top:
 		break;
 
 /* added for alternative assignment operator '=' */
-#define EXPECT_ASSIGN(c, x, y, z) case x: ret = expectAssign(x, y, z); break;
+#define EXPECT_ASSIGN(c, x, y, z) case c: ret = expect(x, y, z); break;
 		EXPECT_ASSIGN('=', '=', T_EQUAL, T_ASSIGN);
 
 #define EXPECT(x, y, z) case x: ret = expect(y, z, x); break;
 		EXPECT(':', '=', T_ASSIGN);
-//		EXPECT('=', '=', T_EQUAL);
+//		EXPECT('=', '=', T_EQUAL); // remove for single character assignment operator
 		EXPECT('>', '=', T_GREATER_EQUAL);
 		EXPECT('<', '=', T_LESS_EQUAL);
 		EXPECT('!', '=', T_NOT_EQUAL);
