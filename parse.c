@@ -1139,12 +1139,14 @@ static void term_prime(Procedure *p, NodeList *nodes) {
 		Node *node;
 		//      term(p, nodes);
 		factor(p, nodes);
-		node = &nodes->nodes[nodes->numNodes - 1];
-		if ((i == '/' || i == '%' || i == T_DIV2) && node->token == T_CONSTANT && node->value.type != V_STRING && node->value.intData == 0) {
-			parseSemanticError("Division by zero!");
+		if (nodes->numNodes > 0) { // fix crash for DLL
+			node = &nodes->nodes[nodes->numNodes - 1];
+			if ((i == '/' || i == '%' || i == T_DIV2) && node->token == T_CONSTANT && node->value.type != V_STRING && node->value.intData == 0) {
+				parseSemanticError("Division by zero!");
+			}
+			emitOp(p, nodes, i);
+			term_prime(p, nodes);
 		}
-		emitOp(p, nodes, i);
-		term_prime(p, nodes);
 	}
 	else ungetToken();
 }
