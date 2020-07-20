@@ -85,13 +85,13 @@
     <ClInclude Include="tokens.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="internal.H">
+    <ClInclude Include="internal.h">
       <Filter>Header Files\mcpp</Filter>
     </ClInclude>
-    <ClInclude Include="noconfig.H">
+    <ClInclude Include="noconfig.h">
       <Filter>Header Files\mcpp</Filter>
     </ClInclude>
-    <ClInclude Include="system.H">
+    <ClInclude Include="system.h">
       <Filter>Header Files\mcpp</Filter>
     </ClInclude>
     <ClInclude Include="gencode.h">

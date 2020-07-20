@@ -325,9 +325,9 @@
   <ItemGroup>
     <ClInclude Include="extra.h" />
     <ClInclude Include="gencode.h" />
-    <ClInclude Include="internal.H" />
+    <ClInclude Include="internal.h" />
     <ClInclude Include="lex.h" />
-    <ClInclude Include="noconfig.H" />
+    <ClInclude Include="noconfig.h" />
     <ClInclude Include="opcodes.h" />
     <ClInclude Include="opextra.h" />
     <ClInclude Include="oplib.h" />
@@ -336,7 +336,7 @@
     <ClInclude Include="parselib.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sfalltok.h" />
-    <ClInclude Include="system.H" />
+    <ClInclude Include="system.h" />
     <ClInclude Include="tokens.h" />
   </ItemGroup>
   <ItemGroup>
