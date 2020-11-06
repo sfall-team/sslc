@@ -475,10 +475,8 @@ static void assignVariable(VariableList *v, int which, LexData *what) {
 static void reference(int* numrefs, int** refs) {
 	if (!*refs) {
 		*refs = (int*)malloc(8 * 8);
-#ifndef BUILDING_DLL // Fakels: fixes the list of references for sfall script editor
 	} else if (refs[0][numrefs[0] * 2 - 2] == lexGetLineno(currentInputStream) && refs[0][numrefs[0] * 2 - 1] == (int)lexGetFilename(currentInputStream)) {
 		return;
-#endif
 	} else if (!(numrefs[0] % 8)) {
 		*refs = (int*)realloc(*refs, (numrefs[0] + 9) * 8);
 	}
