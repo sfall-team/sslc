@@ -605,6 +605,9 @@ enum {
 
 	O_TS_DIV, // used for unsigned integer division
 
+	O_TS_SFALL_METARULE7,
+	O_TS_SFALL_METARULE8,
+
 	O_END_OP,
 };
 

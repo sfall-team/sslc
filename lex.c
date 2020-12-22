@@ -524,6 +524,20 @@ int lex_internal(void) {
 top:
 	c = getChar();
 
+	// skip UTF-8 BOM
+	if (c == 0xEF && stream->lineno == 1 && stream->column == 2) {
+		stream->column--;
+		c = getChar();
+		if (c == 0xBB) {
+			c = getChar();
+			stream->column--;
+		}
+		if (c == 0xBF) {
+			c = getChar();
+			stream->column--;
+		}
+	}
+
 	switch(c) {
 	case EOF:
 		ret = T_EOF;
