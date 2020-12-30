@@ -64,10 +64,10 @@ static const SfallOpcode sfall_opcodes[] = {
 	SFALLEXPRSTMT("sfall_func4", TS_SFALL_METARULE4, 5)
 	SFALLEXPRSTMT("sfall_func5", TS_SFALL_METARULE5, 6)
 	SFALLEXPRSTMT("sfall_func6", TS_SFALL_METARULE6, 7)
-	SFALLEXPRSTMT("sfall_func7", TS_SFALL_METARULE7, 8)
-	SFALLEXPRSTMT("sfall_func8", TS_SFALL_METARULE8, 9)
 	SFALLSTMTPROC("register_hook_proc_spec", TS_REGISTER_HOOK_PROC2, 2, 2)
 	SFALLSTMTPROC("reg_anim_callback", TS_REG_ANIM_CALLBACK, 1, 1)
+	SFALLEXPRSTMT("sfall_func7", TS_SFALL_METARULE7, 8)
+	SFALLEXPRSTMT("sfall_func8", TS_SFALL_METARULE8, 9)
 };
 
 int numSfallOpcodes() {
