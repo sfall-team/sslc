@@ -524,19 +524,19 @@ int lex_internal(void) {
 top:
 	c = getChar();
 
-	// skip UTF-8 BOM
-	if (c == 0xEF && stream->lineno == 1 && stream->column == 2) {
-		stream->column--;
+#ifndef BUILDING_DLL
+	// skip UTF-8 BOM marker
+	if (c == 0xEF) {
 		c = getChar();
 		if (c == 0xBB) {
 			c = getChar();
-			stream->column--;
-		}
-		if (c == 0xBF) {
-			c = getChar();
-			stream->column--;
+			if (c == 0xBF) {
+				stream->column -= 3;
+				goto top;
+			}
 		}
 	}
+#endif
 
 	switch(c) {
 	case EOF:
