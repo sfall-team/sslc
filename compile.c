@@ -38,7 +38,7 @@ FILE *parseroutput;
 #endif
 
 static void PrintLogo() {
-	parseOutput("Startreck scripting language compiler (Fallout 2 sfall edition " VERSION_STRING ")\n\n"
+	parseOutput("Startrek Scripting Language compiler (Fallout 2 sfall edition " VERSION_STRING ")\n\n"
 #ifndef WIN2K
 		"Preprocessing handled by mcpp 2.7.2\n"
 		"Copyright (c) 1998, 2002-2008 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>\n"
