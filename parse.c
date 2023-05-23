@@ -682,6 +682,17 @@ static Procedure *addProcedure(ProcedureList *procs, char **namelist, char *name
 	return procs->procedures + i;
 }
 
+static void copyVariables(VariableList *to, char **toNames, VariableList *from, char *fromNames) {
+	int i, varI;
+
+	for (i = 0; i < from->numVariables; ++i) {
+		varI = addVariable(to, toNames, from->variables[i].type,
+			getName(from->variables[i].name, fromNames));
+		to->variables[i].value = from->variables[i].value;
+		to->variables[i].initialized = from->variables[i].initialized;
+	}
+}
+
 static int externProcedure(ProcedureList *pl, char **namelist, int type) {
 	Procedure *p;
 	int numArgs = 0;
@@ -739,8 +750,11 @@ static int externProcedure(ProcedureList *pl, char **namelist, int type) {
 	if (type | P_EXPORT)
 		p->uses = 1;
 
+	char* tmpNames = 0;
+	copyVariables(&p->variables, &tmpNames, &args, argNames);
 	freeVariableList(&args);
 	if (argNames) free(argNames);
+	if (tmpNames) free(tmpNames);
 
 	return 0;
 }
@@ -858,17 +872,6 @@ static int export(Program *p, char **names) {
 
 	ungetToken();
 	return 0;
-}
-
-static void copyVariables(VariableList *to, char **toNames, VariableList *from, char *fromNames) {
-	int i, varI;
-
-	for (i = 0; i < from->numVariables; ++i) {
-		varI = addVariable(to, toNames, from->variables[i].type,
-			getName(from->variables[i].name, fromNames));
-		to->variables[i].value = from->variables[i].value;
-		to->variables[i].initialized = from->variables[i].initialized;
-	}
 }
 
 /* Parse the syntax for declaring global and local variables of the procedures */
