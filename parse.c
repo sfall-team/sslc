@@ -696,7 +696,7 @@ static void copyVariables(VariableList *to, char **toNames, VariableList *from, 
 static int externProcedure(ProcedureList *pl, char **namelist, int type) {
 	Procedure *p;
 	int numArgs = 0;
-	char *argNames = 0;
+	char *argNames = 0, *tmpNames = 0;
 	VariableList args;
 
 	args.numVariables = 0;
@@ -750,7 +750,6 @@ static int externProcedure(ProcedureList *pl, char **namelist, int type) {
 	if (type | P_EXPORT)
 		p->uses = 1;
 
-	char* tmpNames = 0;
 	copyVariables(&p->variables, &tmpNames, &args, argNames);
 	freeVariableList(&args);
 	if (argNames) free(argNames);
