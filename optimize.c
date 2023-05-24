@@ -715,7 +715,15 @@ static void DeadVariableRemoval(NodeList* _nodes, VariableList* vars, int numArg
 	int *uses = (int*)calloc(1, vars->numVariables * 4);
 	for (i = 0; i < vars->numVariables; i++) uses[i] = 0;
 	for (i = 0; i < _nodes->numNodes; i++) {
-		if (nodes[i].token == T_SYMBOL && (var = LookupVariable(&nodes[i])) != -1) uses[var]++;
+		if (nodes[i].token == T_SYMBOL && (var = LookupVariable(&nodes[i])) != -1) {
+			uses[var]++;
+			// If any proc argument is used, mark all previous as used too, to prevent argument values being swapped.
+			if (var < numArgs) {
+				for (j = 0; j < var; j++) {
+					if (uses[j] == 0) uses[j]++;
+				}
+			}
+		}
 	}
 	for (i = vars->numVariables - 1; i >= 0;i--) {
 		if (!uses[i]) {
