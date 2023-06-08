@@ -1,0 +1,8 @@
+*.vcxproj.user
+.vs/
+Build/
+Debug/
+Release/
+ReleaseDLL/
+*.exe
+*.dll
