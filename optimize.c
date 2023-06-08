@@ -1192,6 +1192,73 @@ static void CompressNamelist(Program *prog) {
 	free(transforms);
 }
 
+static void CompressStringspace(Program *prog) {
+	char* list = prog->stringspace + 4, *endptr;
+	int entries = 0, *refs, *offsets, *transforms, i, j, k;
+	Procedure* proc;
+	Node* node;
+
+	while (*(unsigned short*)list != 0xffff) {
+		entries++;
+		list += *(unsigned short*)list + 2;
+	}
+	endptr = list + 2;
+	refs = (int*)calloc(1, entries * 4);
+	offsets = (int*)malloc(entries * 4);
+	transforms = (int*)malloc(entries * 4);
+	//first find the offsets
+	list = prog->stringspace +4;
+	for (i = 0; i < entries; i++) {
+		offsets[i] = 2 + (unsigned int)list - (unsigned int)prog->stringspace;
+		list += *(unsigned short*)list + 2;
+	}
+	memcpy(transforms, offsets, entries * 4);
+	//Then check all procedures nodes to see where in the stringspace they point
+	for (i = 0; i < prog->procedures.numProcedures; i++) {
+		proc = &prog->procedures.procedures[i];
+		for (k = 0; k < proc->nodes.numNodes; k++) {
+			node = &proc->nodes.nodes[k];
+			if (node->token == T_CONSTANT && node->value.type == V_STRING) {
+				for (j = 0; j < entries; j++) {
+					if (node->value.stringData == offsets[j]) refs[j] = 1;
+				}
+			}
+		}
+	}
+	//For each string that isn't referenced, remove it
+	for (i = entries - 1; i >= 0; i--) {
+		if (!refs[i]) {
+			int len = *(unsigned short*)(prog->stringspace + offsets[i] - 2) + 2;
+			parseMessageAtNode(0, "Removing unused string '%s' from program stringspace", prog->stringspace + offsets[i]);
+			(*(unsigned int*)prog->stringspace) -= len;
+			memmove(prog->stringspace + offsets[i] - 2, len + prog->stringspace + offsets[i] - 2, endptr - (len + prog->stringspace + offsets[i] - 2));
+			transforms[i] = 0x7fffffff;
+			for (j = i + 1; j < entries; j++) transforms[j] -= len;
+		}
+	}
+	//And finally, update the string pointers of everything else
+	for (i = 0; i < prog->procedures.numProcedures; i++) {
+		proc = &prog->procedures.procedures[i];
+		for (k = 0; k < proc->nodes.numNodes; k++) {
+			node = &proc->nodes.nodes[k];
+			if (node->token == T_CONSTANT && node->value.type == V_STRING) {
+				for (j = 0; j < entries; j++) {
+					if (node->value.stringData == offsets[j]) {
+						assert(transforms[j] != 0x7fffffff);
+						node->value.stringData = transforms[j];
+						break;
+					}
+				}
+			}
+		}
+		
+	}
+
+	free(refs);
+	free(offsets);
+	free(transforms);
+}
+
 void optimizeTree(Program *prog) {
 	int i, matched = 1;
 	currprogram = prog;
@@ -1215,4 +1282,5 @@ void optimizeTree(Program *prog) {
 		}
 	}
 	CompressNamelist(prog);
+	CompressStringspace(prog);
 }
