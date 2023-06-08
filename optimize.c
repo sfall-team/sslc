@@ -83,6 +83,16 @@ typedef struct {
 	int flags;
 } VarUsage;
 
+static void MarkVariableRead(VarUsage* usage, int var, int currstatement, int whiledepth) {
+	usage[var].lastuse = currstatement;
+	if (whiledepth) usage[var].flags |= VU_LAST_READ_IN_WHILE;
+	else usage[var].flags &= ~VU_LAST_READ_IN_WHILE;
+	if (!usage[var].firstuse) {
+		usage[var].firstuse = currstatement;
+		if (whiledepth) usage[var].flags |= VU_FIRST_READ_IN_WHILE;
+	}
+}
+
 static void FindVarUsage(const Node* node, VarUsage* usage, int varCount) {
 	int depth = 1, currstatement = 0, i = 0, whiledepth = 0, ifdepth = 0, var, expressiondepth;
 	memset(usage, 0, varCount * sizeof(VarUsage));
@@ -129,13 +139,7 @@ static void FindVarUsage(const Node* node, VarUsage* usage, int varCount) {
 					} else if (!pure && currstatement == usage[var].firstassign) usage[var].flags &= ~VU_FIRST_ASSIGN_IS_PURE;
 				}
 				if (node->token != T_ASSIGN) {
-					usage[var].lastuse = currstatement;
-					if (whiledepth) usage[var].flags |= VU_LAST_READ_IN_WHILE;
-					else usage[var].flags &= ~VU_LAST_READ_IN_WHILE;
-					if (!usage[var].firstuse) {
-						usage[var].firstuse = currstatement;
-						if (whiledepth) usage[var].flags |= VU_FIRST_READ_IN_WHILE;
-					}
+					MarkVariableRead(usage, var, currstatement, whiledepth);
 				}
 			}
 			break;
@@ -148,15 +152,14 @@ static void FindVarUsage(const Node* node, VarUsage* usage, int varCount) {
 				case T_END_EXPRESSION: expressiondepth--; break;
 				case T_SYMBOL:
 					if ((var = LookupVariable(node)) != -1) {
-						usage[var].lastuse = currstatement;
-						if (whiledepth) usage[var].flags |= VU_LAST_READ_IN_WHILE;
-						else usage[var].flags &= ~VU_LAST_READ_IN_WHILE;
-						if (!usage[var].firstuse) {
-							usage[var].firstuse = currstatement;
-							if (whiledepth) usage[var].flags |= VU_FIRST_READ_IN_WHILE;
-						}
+						MarkVariableRead(usage, var, currstatement, whiledepth);
 					}
 				}
+			}
+			break;
+		case T_CALL:
+			if ((++node)->token == T_SYMBOL && ((var = LookupVariable(node)) != -1)) {
+				MarkVariableRead(usage, var, currstatement, whiledepth);
 			}
 			break;
 		}
