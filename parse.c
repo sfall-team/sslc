@@ -1349,7 +1349,7 @@ static int parseEvent(Procedure *p, NodeList *nodes) {
 	int calloffset = nodes->numNodes;
 
 	if (expectToken(T_SYMBOL) == -1) {
-		if (expectToken(T_CONSTANT) != -1 || lexData.type != T_STRING) {
+		if (expectToken(T_CONSTANT) == -1 || lexData.type != T_STRING) {
 			parseSemanticError("Symbol or string expected.");
 			return 0;
 		}
