@@ -961,7 +961,7 @@ static void UpdateProcedureReferences(Procedure* procs, int count) {
 			procs[i].uses = 2;
 			for (j = 0; j < procs[i].nodes.numNodes; j++) {
 				node = &procs[i].nodes.nodes[j];
-				if (node->token == T_SYMBOL && node->value.type == (P_PROCEDURE | P_LOCAL)) {
+				if (node->token == T_SYMBOL && node->value.type & (P_PROCEDURE | P_LOCAL)) {
 					if (!procs[node->value.intData].uses) {
 						matched = 1;
 						procs[node->value.intData].uses = 1;
@@ -971,7 +971,7 @@ static void UpdateProcedureReferences(Procedure* procs, int count) {
 			if (procs[i].type & P_CONDITIONAL) {
 				for (j = 0; j < procs[i].condition.numNodes; j++) {
 					node = &procs[i].condition.nodes[j];
-					if (node->token == T_SYMBOL && node->value.type == (P_PROCEDURE | P_LOCAL)) {
+					if (node->token == T_SYMBOL && node->value.type & (P_PROCEDURE | P_LOCAL)) {
 						if (!procs[node->value.intData].uses) {
 							matched = 1;
 							procs[node->value.intData].uses = 1;
@@ -1218,11 +1218,21 @@ static void CompressNamelist(Program *prog) {
 	FreeNamelistData(refs, offsets, transforms);
 }
 
+static int* GetStringReference(Node *node, Program *prog) {
+	if (node->token == T_CONSTANT && node->value.type == V_STRING) {
+		return &node->value.stringData;
+	}
+	else if (node->token == T_SYMBOL && node->value.type & P_STRINGIFY) {
+		return &prog->procedures.procedures[node->value.intData].stringifiedName;
+	}
+	return 0;
+}
+
 static void CompressStringspace(Program *prog) {
 	if (!prog->stringspace) return;
 
 	char* endptr;
-	int entries = 0, *refs, *offsets, *transforms, i, j, k;
+	int entries = 0, *refs, *offsets, *transforms, i, j, k, *stringData;
 	Procedure* proc;
 	Node* node;
 
@@ -1233,9 +1243,9 @@ static void CompressStringspace(Program *prog) {
 		proc = &prog->procedures.procedures[i];
 		for (k = 0; k < proc->nodes.numNodes; k++) {
 			node = &proc->nodes.nodes[k];
-			if (node->token == T_CONSTANT && node->value.type == V_STRING) {
+			if (stringData = GetStringReference(node, prog)) {
 				for (j = 0; j < entries; j++) {
-					if (node->value.stringData == offsets[j]) refs[j] = 1;
+					if (*stringData == offsets[j]) refs[j] = 1;
 				}
 			}
 		}
@@ -1251,11 +1261,11 @@ static void CompressStringspace(Program *prog) {
 		proc = &prog->procedures.procedures[i];
 		for (k = 0; k < proc->nodes.numNodes; k++) {
 			node = &proc->nodes.nodes[k];
-			if (node->token == T_CONSTANT && node->value.type == V_STRING) {
+			if (stringData = GetStringReference(node, prog)) {
 				for (j = 0; j < entries; j++) {
-					if (node->value.stringData == offsets[j]) {
+					if (*stringData == offsets[j]) {
 						assert(transforms[j] != 0x7fffffff);
-						node->value.stringData = transforms[j];
+						*stringData = transforms[j];
 						break;
 					}
 				}

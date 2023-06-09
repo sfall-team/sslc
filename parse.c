@@ -678,6 +678,7 @@ static Procedure *addProcedure(ProcedureList *procs, char **namelist, char *name
 	procs->procedures[i].start = -1;
 	procs->procedures[i].end = -1;
 	procs->procedures[i].defined = -1;
+	procs->procedures[i].stringifiedName = 0;
 
 	return procs->procedures + i;
 }
@@ -936,7 +937,6 @@ void emitNode(Procedure *p, NodeList *n, LexData *data) {
 	n->nodes[i].token = data->token;
 	n->nodes[i].lineNum = lexGetLineno(currentInputStream);
 	n->nodes[i].column = lexGetColumn(currentInputStream);
-	n->nodes[i].stringify = 0;
 
 	switch (data->token) {
 	case T_CONSTANT:
@@ -975,8 +975,13 @@ void emitNode(Procedure *p, NodeList *n, LexData *data) {
 			else {
 				type |= P_PROCEDURE;
 				referenceProcedure(&currentProgram->procedures, v);
-				if (data->type & P_REFERENCE) {
-					n->nodes[i].stringify = addString(&currentProgram->stringspace, data->stringData);
+				if (data->type == T_STRING) {
+					type |= P_STRINGIFY;
+					Procedure *proc = &currentProgram->procedures.procedures[v];
+					// Add stringified procedure name (because program has separate namelist of string constants)
+					if (!proc->stringifiedName) {
+						proc->stringifiedName = addString(&currentProgram->stringspace, data->stringData);
+					}
 				}
 			}
 		}
@@ -1056,7 +1061,7 @@ static void factor(Procedure *p, NodeList *nodes) {
 			if (q) {
 				if (q->type&P_INLINE) parseSemanticError("Cannot use an inline procedure in an expression");
 				if (refSyntax) {
-					d.type |= P_REFERENCE; // this will make node stringify when writing code
+					d.type = T_STRING; // this will make node stringify when generating code
 					emitNode(p, nodes, &d);
 				} else if (isExpectingProcArg() && (expectToken('(') == -1))  {
 					ungetToken();
