@@ -1179,7 +1179,7 @@ static void CompressNamelist(Program *prog) {
 		SetNameReferenced(prog->externals.variables[i].name, entries, refs, offsets, 1);
 	}
 	for (i = 0; i < prog->variables.numVariables; i++) {
-		SetNameReferenced(prog->externals.variables[i].name, entries, refs, offsets, 2);
+		SetNameReferenced(prog->variables.variables[i].name, entries, refs, offsets, 2);
 	}
 	for (i = 0; i < prog->procedures.numProcedures; i++) {
 		SetNameReferenced(prog->procedures.procedures[i].name, entries, refs, offsets, 4);
@@ -1265,7 +1265,7 @@ static void CompressStringspace(Program *prog) {
 		SetVariableDefaultValueReferenced(&prog->externals.variables[i], entries, refs, offsets, 4);
 	}
 	for (i = 0; i < prog->variables.numVariables; i++) {
-		SetVariableDefaultValueReferenced(&prog->externals.variables[i], entries, refs, offsets, 8);
+		SetVariableDefaultValueReferenced(&prog->variables.variables[i], entries, refs, offsets, 8);
 	}
 	//For each string that isn't referenced, remove it
 	for (i = entries - 1; i >= 0; i--) {
