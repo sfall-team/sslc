@@ -180,7 +180,7 @@ void parseFor(Procedure *p, NodeList *n) {
 	if (expectToken(';') == -1 && !hadbracket) {
 		parseError("Expected ';'");
 	}
-	if(hadbracket&&expectToken(')') == -1) {
+	if (hadbracket && expectToken(')') == -1) {
 		parseError("Expected ')'");
 	}
 	tmp2.numNodes=n->numNodes;
@@ -206,29 +206,26 @@ void parseFor(Procedure *p, NodeList *n) {
 void parseForEach(Procedure *p, NodeList *n) {
 	LexData symbolKey, symbolVal, a, len, count;
 	char hasKey = 0, emitEnd = 0, hasParan = 0;
-	if(expectToken('(') != -1) {
+	if (expectToken('(') != -1) {
 		hasParan = 1;
 	}
-	if(expectToken(T_SYMBOL) == -1) parseError("Expected symbol");
+	if (expectToken(T_SYMBOL) == -1) parseError("Expected symbol");
 	CloneLexData(&symbolVal, &lexData);
-	if(expectToken(':') != -1) {
+	if (expectToken(':') != -1) {
 		symbolKey = symbolVal;
 		if(expectToken(T_SYMBOL) == -1) parseError("Expected symbol for value");
 		CloneLexData(&symbolVal, &lexData);
 		hasKey = 1;
 	}
 
-	if(expectToken(T_IN) == -1) parseError("Expected 'in'");
-	if(expectToken(T_SYMBOL) == -1) {
-		GenTmpVar(p, &a);
-		emitOp(p, n, T_START_STATEMENT);
-		emitNode(p, n, &a);
-		emitOp(p, n, T_ASSIGN);
-		parseExpression(p, n);
-		emitOp(p, n, T_END_STATEMENT);
-	} else {
-		CloneLexData(&a, &lexData);
-	}
+	if (expectToken(T_IN) == -1) parseError("Expected 'in'");
+	// Save result of expression (array value) in temp variable to use later in len_array and get_array.
+	GenTmpVar(p, &a);
+	emitOp(p, n, T_START_STATEMENT);
+	emitNode(p, n, &a);
+	emitOp(p, n, T_ASSIGN);
+	parseExpression(p, n);
+	emitOp(p, n, T_END_STATEMENT);
 
 	GenTmpVar(p, &len);
 	GenTmpVar(p, &count);
