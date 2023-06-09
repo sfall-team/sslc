@@ -1097,10 +1097,9 @@ static void EliminateUnreferencedGlobals(Program *prog) {
 	}
 }
 
-static void CompressNamelist(Program *prog) {
-	char* list = prog->namelist + 4, *endptr;
-	int entries = 0, *refs, *offsets, *transforms, i, j;
-	Procedure* proc;
+static void GetNamelistData(char* namelist, int* outEntries, char** outEndptr, int** outRefs, int** outOffsets, int** outTransforms) {
+	char* list = namelist + 4, *endptr;
+	int entries = 0, *refs, *offsets, *transforms, i;
 
 	while (*(unsigned short*)list != 0xffff) {
 		entries++;
@@ -1111,12 +1110,45 @@ static void CompressNamelist(Program *prog) {
 	offsets = (int*)malloc(entries * 4);
 	transforms = (int*)malloc(entries * 4);
 	//first find the offsets
-	list = prog->namelist +4;
+	list = namelist + 4;
 	for (i = 0; i < entries; i++) {
-		offsets[i] = 2 + (unsigned int)list - (unsigned int)prog->namelist;
+		offsets[i] = 2 + (unsigned int)list - (unsigned int)namelist;
 		list += *(unsigned short*)list + 2;
 	}
 	memcpy(transforms, offsets, entries * 4);
+
+	*outEntries = entries;
+	*outEndptr = endptr;
+	*outRefs = refs;
+	*outOffsets = offsets;
+	*outTransforms = transforms;
+}
+
+static void FreeNamelistData(int* refs, int* offsets, int* transforms) {
+	free(refs);
+	free(offsets);
+	free(transforms);
+}
+
+static void RemoveFromNamelist(char* namelist, int i, int entries, int* offsets, int* transforms, char** endptr, char* logFormat) {
+	int j;
+	parseMessageAtNode(0, logFormat, namelist + offsets[i]);
+	char* namestart = namelist + offsets[i] - 2;
+	int len = *(unsigned short*)namestart + 2;
+	memmove(namestart, len + namestart, *endptr - (len + namestart));
+	(*(unsigned int*)namelist) -= len;
+	*endptr -= len;
+	transforms[i] = 0x7fffffff;
+	for (j = i + 1; j < entries; j++) transforms[j] -= len;
+}
+
+static void CompressNamelist(Program *prog) {
+	char* endptr, *namestart;
+	int entries = 0, *refs, *offsets, *transforms, i, j;
+	Procedure* proc;
+
+	GetNamelistData(prog->namelist, &entries, &endptr, &refs, &offsets, &transforms);
+
 	//Then check all variables, imports and procedures to see where in the namelist they point
 	for (i = 0; i < prog->externals.numVariables; i++) {
 		for (j = 0; j < entries; j++) {
@@ -1138,21 +1170,17 @@ static void CompressNamelist(Program *prog) {
 	//For each string that isn't referenced, remove it
 	for (i = entries - 1; i >= 0; i--) {
 		if (!refs[i]) {
-			int len = *(unsigned short*)(prog->namelist + offsets[i] - 2) + 2;
-			parseMessageAtNode(0, "Removing unused string '%s' from program namespace", prog->namelist + offsets[i]);
-			(*(unsigned int*)prog->namelist) -= len;
-			memmove(prog->namelist + offsets[i] - 2, len + prog->namelist + offsets[i] - 2, endptr - (len + prog->namelist + offsets[i] - 2));
-			transforms[i] = 0x7fffffff;
-			for (j = i + 1; j < entries; j++) transforms[j] -= len;
-		} else if (refs[i] == 2&&optimize>=3) {
-			int len=*(unsigned short*)(prog->namelist + offsets[i] - 2) + 2;
+			RemoveFromNamelist(prog->namelist, i, entries, offsets, transforms, &endptr, "Removing unused string '%s' from program namespace");
+		} else if (refs[i] == 2 && optimize>=3) {
+			namestart = prog->namelist + offsets[i] - 2;
+			int len = *(unsigned short*)namestart + 2;
 			if (len > 4) {
 				parseMessageAtNode(0, "Shortening non-visible string '%s' in program namespace", prog->namelist + offsets[i]);
-				*(unsigned short*)(prog->namelist + offsets[i] - 2) = 2;
+				*(unsigned short*)(namestart) = 2;
 				*(char*)(prog->namelist + offsets[i] + 0) = 'a';
 				*(char*)(prog->namelist + offsets[i] + 1) = 0;
 				(*(unsigned int*)prog->namelist) -= len - 4;
-				memmove(prog->namelist + offsets[i] + 2, len + prog->namelist + offsets[i] - 2, endptr - (len + prog->namelist + offsets[i] - 2));
+				memmove(prog->namelist + offsets[i] + 2, len + namestart, endptr - (len + namestart));
 				for (j = i + 1; j < entries; j++) transforms[j] -= len - 4;
 			}
 		}
@@ -1187,32 +1215,17 @@ static void CompressNamelist(Program *prog) {
 		}
 	}
 
-	free(refs);
-	free(offsets);
-	free(transforms);
+	FreeNamelistData(refs, offsets, transforms);
 }
 
 static void CompressStringspace(Program *prog) {
-	char* list = prog->stringspace + 4, *endptr;
+	char* endptr;
 	int entries = 0, *refs, *offsets, *transforms, i, j, k;
 	Procedure* proc;
 	Node* node;
 
-	while (*(unsigned short*)list != 0xffff) {
-		entries++;
-		list += *(unsigned short*)list + 2;
-	}
-	endptr = list + 2;
-	refs = (int*)calloc(1, entries * 4);
-	offsets = (int*)malloc(entries * 4);
-	transforms = (int*)malloc(entries * 4);
-	//first find the offsets
-	list = prog->stringspace +4;
-	for (i = 0; i < entries; i++) {
-		offsets[i] = 2 + (unsigned int)list - (unsigned int)prog->stringspace;
-		list += *(unsigned short*)list + 2;
-	}
-	memcpy(transforms, offsets, entries * 4);
+	GetNamelistData(prog->stringspace, &entries, &endptr, &refs, &offsets, &transforms);
+
 	//Then check all procedures nodes to see where in the stringspace they point
 	for (i = 0; i < prog->procedures.numProcedures; i++) {
 		proc = &prog->procedures.procedures[i];
@@ -1228,12 +1241,7 @@ static void CompressStringspace(Program *prog) {
 	//For each string that isn't referenced, remove it
 	for (i = entries - 1; i >= 0; i--) {
 		if (!refs[i]) {
-			int len = *(unsigned short*)(prog->stringspace + offsets[i] - 2) + 2;
-			parseMessageAtNode(0, "Removing unused string '%s' from program stringspace", prog->stringspace + offsets[i]);
-			(*(unsigned int*)prog->stringspace) -= len;
-			memmove(prog->stringspace + offsets[i] - 2, len + prog->stringspace + offsets[i] - 2, endptr - (len + prog->stringspace + offsets[i] - 2));
-			transforms[i] = 0x7fffffff;
-			for (j = i + 1; j < entries; j++) transforms[j] -= len;
+			RemoveFromNamelist(prog->stringspace, i, entries, offsets, transforms, &endptr, "Removing unused string '%s' from program stringspace");
 		}
 	}
 	//And finally, update the string pointers of everything else
@@ -1254,9 +1262,7 @@ static void CompressStringspace(Program *prog) {
 		
 	}
 
-	free(refs);
-	free(offsets);
-	free(transforms);
+	FreeNamelistData(refs, offsets, transforms);
 }
 
 void optimizeTree(Program *prog) {
