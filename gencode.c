@@ -95,28 +95,24 @@ static void writenamelist(FILE *f, char *namelist) {
 }
 
 static void writeProcAddress(NodeList *n, int i, FILE *f) {
-	int isRef = 0;
 	switch(n->nodes[i].token) {
 	case T_SYMBOL:
 
 		writeInt(n->nodes[i].value.intData, f);
-		/*if (n->nodes[i].flags & P_REFERENCE)
-			isRef = 1;  */
 		if (!(n->nodes[i].value.type & P_PROCEDURE)) {
+			// We're trying to call on a variable. We can't know value type at compile. But engine handler expects it to be int.
+			// So we must assume string value type and insert proc lookup opcode.
 			if (n->nodes[i].value.type & P_LOCAL) {
 				writeOp(O_FETCH, f);
-				if (!isRef)
-					writeOp(O_LOOKUP_STRING_PROC, f);
+				writeOp(O_LOOKUP_STRING_PROC, f);
 			}
 			else if (n->nodes[i].value.type & P_GLOBAL) {
 				writeOp(O_FETCH_GLOBAL, f);
-				if (!isRef)
-					writeOp(O_LOOKUP_STRING_PROC, f);
+				writeOp(O_LOOKUP_STRING_PROC, f);
 			}
 			else if (n->nodes[i].value.type & P_EXTERN) {
 				writeOp(O_FETCH_EXTERNAL, f);
-				if (!isRef)
-					writeOp(O_LOOKUP_STRING_PROC, f);
+				writeOp(O_LOOKUP_STRING_PROC, f);
 			}
 		}
 		break;
@@ -259,8 +255,8 @@ int writeNode(NodeList *n, int i, FILE *f) {
 		break;
 	case T_SYMBOL:
 		if (n->nodes[i].value.type & P_PROCEDURE) {
-			if (n->nodes[i].stringify) {  // special case when passing procedure as reference
-				writeString(n->nodes[i].stringify, f);
+			if (n->nodes[i].value.type & P_STRINGIFY) {  // special case when passing procedure as reference
+				writeString(currentProgram->procedures.procedures[n->nodes[i].value.intData].stringifiedName, f);
 			} else
 				writeInt(n->nodes[i].value.intData, f);
 		}

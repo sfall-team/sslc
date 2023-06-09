@@ -759,6 +759,7 @@ top:
 		ret = lookupConstant(buf[which]);
 
 		if (ret == -1) {
+			lexData.type = T_SYMBOL;
 			lexData.stringData = buf[which];
 			ret = T_SYMBOL;
 		}

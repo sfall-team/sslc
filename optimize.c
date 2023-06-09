@@ -158,7 +158,7 @@ static void FindVarUsage(const Node* node, VarUsage* usage, int varCount) {
 			}
 			break;
 		case T_CALL:
-			if ((++node)->token == T_SYMBOL && ((var = LookupVariable(node)) != -1)) {
+			if ((node + 1)->token == T_SYMBOL && ((var = LookupVariable(node + 1)) != -1)) {
 				MarkVariableRead(usage, var, currstatement, whiledepth);
 			}
 			break;
@@ -946,6 +946,10 @@ static void DecendUnusedProcedures(Program *prog) {
 	}
 }*/
 
+static int IsProcedureReference(Node* node) {
+	return node->token == T_SYMBOL && ((node->value.type & (P_PROCEDURE | P_LOCAL)) == (P_PROCEDURE | P_LOCAL));
+}
+
 static void UpdateProcedureReferences(Procedure* procs, int count) {
 	int i, j, matched = 1;
 	Node* node;
@@ -961,7 +965,7 @@ static void UpdateProcedureReferences(Procedure* procs, int count) {
 			procs[i].uses = 2;
 			for (j = 0; j < procs[i].nodes.numNodes; j++) {
 				node = &procs[i].nodes.nodes[j];
-				if (node->token == T_SYMBOL && node->value.type == (P_PROCEDURE | P_LOCAL)) {
+				if (IsProcedureReference(node)) {
 					if (!procs[node->value.intData].uses) {
 						matched = 1;
 						procs[node->value.intData].uses = 1;
@@ -971,7 +975,7 @@ static void UpdateProcedureReferences(Procedure* procs, int count) {
 			if (procs[i].type & P_CONDITIONAL) {
 				for (j = 0; j < procs[i].condition.numNodes; j++) {
 					node = &procs[i].condition.nodes[j];
-					if (node->token == T_SYMBOL && node->value.type == (P_PROCEDURE | P_LOCAL)) {
+					if (IsProcedureReference(node)) {
 						if (!procs[node->value.intData].uses) {
 							matched = 1;
 							procs[node->value.intData].uses = 1;
@@ -1097,10 +1101,9 @@ static void EliminateUnreferencedGlobals(Program *prog) {
 	}
 }
 
-static void CompressNamelist(Program *prog) {
-	char* list = prog->namelist + 4, *endptr;
-	int entries = 0, *refs, *offsets, *transforms, i, j;
-	Procedure* proc;
+static void GetNamelistData(char* namelist, int* outEntries, char** outEndptr, int** outRefs, int** outOffsets, int** outTransforms) {
+	char* list = namelist + 4, *endptr;
+	int entries = 0, *refs, *offsets, *transforms, i;
 
 	while (*(unsigned short*)list != 0xffff) {
 		entries++;
@@ -1111,85 +1114,186 @@ static void CompressNamelist(Program *prog) {
 	offsets = (int*)malloc(entries * 4);
 	transforms = (int*)malloc(entries * 4);
 	//first find the offsets
-	list = prog->namelist +4;
+	list = namelist + 4;
 	for (i = 0; i < entries; i++) {
-		offsets[i] = 2 + (unsigned int)list - (unsigned int)prog->namelist;
+		offsets[i] = 2 + (unsigned int)list - (unsigned int)namelist;
 		list += *(unsigned short*)list + 2;
 	}
 	memcpy(transforms, offsets, entries * 4);
+
+	*outEntries = entries;
+	*outEndptr = endptr;
+	*outRefs = refs;
+	*outOffsets = offsets;
+	*outTransforms = transforms;
+}
+
+static void FreeNamelistData(int* refs, int* offsets, int* transforms) {
+	free(refs);
+	free(offsets);
+	free(transforms);
+}
+
+static void RemoveFromNamelist(char* namelist, int i, int entries, int* offsets, int* transforms, char** endptr, char* logFormat) {
+	int j;
+	parseMessageAtNode(0, logFormat, namelist + offsets[i]);
+	char* namestart = namelist + offsets[i] - 2;
+	int len = *(unsigned short*)namestart + 2;
+	memmove(namestart, len + namestart, *endptr - (len + namestart));
+	(*(unsigned int*)namelist) -= len;
+	*endptr -= len;
+	transforms[i] = 0x7fffffff;
+	for (j = i + 1; j < entries; j++) transforms[j] -= len;
+}
+
+static void SetNameReferenced(int name, int entries, int* refs, int* offsets, int refType) {
+	int j;
+	for (j = 0; j < entries; j++) {
+		if (name == offsets[j]) {
+			refs[j] |= refType;
+			break;
+		}
+	}
+}
+
+static void ShiftName(int* name, int entries, int* transforms, int* offsets) {
+	int j;
+	for (j = 0; j < entries; j++) {
+		if (*name == offsets[j]) {
+			assert(transforms[j] != 0x7fffffff);
+			*name = transforms[j];
+			break;
+		}
+	}
+}
+
+
+static void CompressNamelist(Program *prog) {
+	char* endptr, *namestart;
+	int entries = 0, *refs, *offsets, *transforms, i, j;
+
+	GetNamelistData(prog->namelist, &entries, &endptr, &refs, &offsets, &transforms);
+
 	//Then check all variables, imports and procedures to see where in the namelist they point
 	for (i = 0; i < prog->externals.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->externals.variables[i].name == offsets[j]) refs[j] |= 1;
-		}
+		SetNameReferenced(prog->externals.variables[i].name, entries, refs, offsets, 1);
 	}
 	for (i = 0; i < prog->variables.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->variables.variables[i].name == offsets[j]) refs[j] |= 2;
-		}
+		SetNameReferenced(prog->variables.variables[i].name, entries, refs, offsets, 2);
 	}
-
 	for (i = 0; i < prog->procedures.numProcedures; i++) {
-		proc = &prog->procedures.procedures[i];
-		for (j = 0; j < entries; j++) {
-			if (proc->name == offsets[j]) refs[j] |= 4;
-		}
+		SetNameReferenced(prog->procedures.procedures[i].name, entries, refs, offsets, 4);
 	}
 	//For each string that isn't referenced, remove it
 	for (i = entries - 1; i >= 0; i--) {
 		if (!refs[i]) {
-			int len = *(unsigned short*)(prog->namelist + offsets[i] - 2) + 2;
-			parseMessageAtNode(0, "Removing unused string '%s' from program namespace", prog->namelist + offsets[i]);
-			(*(unsigned int*)prog->namelist) -= len;
-			memmove(prog->namelist + offsets[i] - 2, len + prog->namelist + offsets[i] - 2, endptr - (len + prog->namelist + offsets[i] - 2));
-			transforms[i] = 0x7fffffff;
-			for (j = i + 1; j < entries; j++) transforms[j] -= len;
-		} else if (refs[i] == 2&&optimize>=3) {
-			int len=*(unsigned short*)(prog->namelist + offsets[i] - 2) + 2;
+			RemoveFromNamelist(prog->namelist, i, entries, offsets, transforms, &endptr, "Removing unused string '%s' from program namespace");
+		} else if (refs[i] == 2 && optimize>=3) {
+			namestart = prog->namelist + offsets[i] - 2;
+			int len = *(unsigned short*)namestart + 2;
 			if (len > 4) {
 				parseMessageAtNode(0, "Shortening non-visible string '%s' in program namespace", prog->namelist + offsets[i]);
-				*(unsigned short*)(prog->namelist + offsets[i] - 2) = 2;
+				*(unsigned short*)(namestart) = 2;
 				*(char*)(prog->namelist + offsets[i] + 0) = 'a';
 				*(char*)(prog->namelist + offsets[i] + 1) = 0;
 				(*(unsigned int*)prog->namelist) -= len - 4;
-				memmove(prog->namelist + offsets[i] + 2, len + prog->namelist + offsets[i] - 2, endptr - (len + prog->namelist + offsets[i] - 2));
+				memmove(prog->namelist + offsets[i] + 2, len + namestart, endptr - (len + namestart));
 				for (j = i + 1; j < entries; j++) transforms[j] -= len - 4;
 			}
 		}
 	}
 	//And finally, update the name pointers of everything else
 	for (i = 0; i < prog->externals.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->externals.variables[i].name == offsets[j]) {
-				assert(transforms[j] != 0x7fffffff);
-				prog->externals.variables[i].name = transforms[j];
-				break;
-			}
-		}
+		ShiftName(&prog->externals.variables[i].name, entries, transforms, offsets);
 	}
 	for (i = 0; i < prog->variables.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->variables.variables[i].name == offsets[j]) {
-				assert(transforms[j] != 0x7fffffff);
-				prog->variables.variables[i].name = transforms[j];
-				break;
-			}
-		}
+		ShiftName(&prog->variables.variables[i].name, entries, transforms, offsets);
 	}
 	for (i = 0; i < prog->procedures.numProcedures; i++) {
-		proc = &prog->procedures.procedures[i];
-		for (j = 0; j < entries; j++) {
-			if (proc->name == offsets[j]) {
-				assert(transforms[j] != 0x7fffffff);
-				proc->name = transforms[j];
-				break;
-			}
-		}
+		ShiftName(&prog->procedures.procedures[i].name, entries, transforms, offsets);
 	}
 
-	free(refs);
-	free(offsets);
-	free(transforms);
+	FreeNamelistData(refs, offsets, transforms);
+}
+
+static int* GetStringReference(Node *node, Program *prog) {
+	if (node->token == T_CONSTANT && node->value.type == V_STRING) {
+		return &node->value.stringData;
+	}
+	else if (node->token == T_SYMBOL && node->value.type & P_STRINGIFY) {
+		return &prog->procedures.procedures[node->value.intData].stringifiedName;
+	}
+	return 0;
+}
+
+static void SetVariableDefaultValueReferenced(Variable* var, int entries, int* refs, int* offsets, int refType) {
+	if (var->initialized && var->value.type == V_STRING) {
+		SetNameReferenced(var->value.stringData, entries, refs, offsets, refType);
+	}
+}
+
+static void ShiftVariableDefaultValue(Variable* var, int entries, int* transforms, int* offsets) {
+	if (var->initialized && var->value.type == V_STRING) {
+		ShiftName(&var->value.stringData, entries, transforms, offsets);
+	}
+}
+
+static void CompressStringspace(Program *prog) {
+	if (!prog->stringspace) return;
+
+	char* endptr;
+	int entries = 0, *refs, *offsets, *transforms, i, k, *stringData;
+	Procedure* proc;
+	Node* node;
+
+	GetNamelistData(prog->stringspace, &entries, &endptr, &refs, &offsets, &transforms);
+
+	//Then check all procedures nodes and variable default values to see where in the stringspace they point
+	for (i = 0; i < prog->procedures.numProcedures; i++) {
+		proc = &prog->procedures.procedures[i];
+		for (k = 0; k < proc->nodes.numNodes; k++) {
+			node = &proc->nodes.nodes[k];
+			if (stringData = GetStringReference(node, prog)) {
+				SetNameReferenced(*stringData, entries, refs, offsets, 1);
+			}
+		}
+		for (k = 0; k < proc->variables.numVariables; k++) {
+			SetVariableDefaultValueReferenced(&proc->variables.variables[k], entries, refs, offsets, 2);
+		}
+	}
+	for (i = 0; i < prog->externals.numVariables; i++) {
+		SetVariableDefaultValueReferenced(&prog->externals.variables[i], entries, refs, offsets, 4);
+	}
+	for (i = 0; i < prog->variables.numVariables; i++) {
+		SetVariableDefaultValueReferenced(&prog->variables.variables[i], entries, refs, offsets, 8);
+	}
+	//For each string that isn't referenced, remove it
+	for (i = entries - 1; i >= 0; i--) {
+		if (!refs[i]) {
+			RemoveFromNamelist(prog->stringspace, i, entries, offsets, transforms, &endptr, "Removing unused string '%s' from program stringspace");
+		}
+	}
+	//And finally, update the string pointers of everything else
+	for (i = 0; i < prog->procedures.numProcedures; i++) {
+		proc = &prog->procedures.procedures[i];
+		for (k = 0; k < proc->nodes.numNodes; k++) {
+			node = &proc->nodes.nodes[k];
+			if (stringData = GetStringReference(node, prog)) {
+				ShiftName(stringData, entries, transforms, offsets);
+			}
+		}
+		for (k = 0; k < proc->variables.numVariables; k++) {
+			ShiftVariableDefaultValue(&proc->variables.variables[k], entries, transforms, offsets);
+		}
+	}
+	for (i = 0; i < prog->externals.numVariables; i++) {
+		ShiftVariableDefaultValue(&prog->externals.variables[i], entries, transforms, offsets);
+	}
+	for (i = 0; i < prog->variables.numVariables; i++) {
+		ShiftVariableDefaultValue(&prog->variables.variables[i], entries, transforms, offsets);
+	}
+
+	FreeNamelistData(refs, offsets, transforms);
 }
 
 void optimizeTree(Program *prog) {
@@ -1215,4 +1319,5 @@ void optimizeTree(Program *prog) {
 		}
 	}
 	CompressNamelist(prog);
+	CompressStringspace(prog);
 }
