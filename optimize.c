@@ -1146,30 +1146,43 @@ static void RemoveFromNamelist(char* namelist, int i, int entries, int* offsets,
 	for (j = i + 1; j < entries; j++) transforms[j] -= len;
 }
 
+static void SetNameReferenced(int name, int entries, int* refs, int* offsets, int refType) {
+	int j;
+	for (j = 0; j < entries; j++) {
+		if (name == offsets[j]) {
+			refs[j] |= refType;
+			break;
+		}
+	}
+}
+
+static void ShiftName(int* name, int entries, int* transforms, int* offsets) {
+	int j;
+	for (j = 0; j < entries; j++) {
+		if (*name == offsets[j]) {
+			assert(transforms[j] != 0x7fffffff);
+			*name = transforms[j];
+			break;
+		}
+	}
+}
+
+
 static void CompressNamelist(Program *prog) {
 	char* endptr, *namestart;
 	int entries = 0, *refs, *offsets, *transforms, i, j;
-	Procedure* proc;
 
 	GetNamelistData(prog->namelist, &entries, &endptr, &refs, &offsets, &transforms);
 
 	//Then check all variables, imports and procedures to see where in the namelist they point
 	for (i = 0; i < prog->externals.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->externals.variables[i].name == offsets[j]) refs[j] |= 1;
-		}
+		SetNameReferenced(prog->externals.variables[i].name, entries, refs, offsets, 1);
 	}
 	for (i = 0; i < prog->variables.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->variables.variables[i].name == offsets[j]) refs[j] |= 2;
-		}
+		SetNameReferenced(prog->externals.variables[i].name, entries, refs, offsets, 2);
 	}
-
 	for (i = 0; i < prog->procedures.numProcedures; i++) {
-		proc = &prog->procedures.procedures[i];
-		for (j = 0; j < entries; j++) {
-			if (proc->name == offsets[j]) refs[j] |= 4;
-		}
+		SetNameReferenced(prog->procedures.procedures[i].name, entries, refs, offsets, 4);
 	}
 	//For each string that isn't referenced, remove it
 	for (i = entries - 1; i >= 0; i--) {
@@ -1191,32 +1204,13 @@ static void CompressNamelist(Program *prog) {
 	}
 	//And finally, update the name pointers of everything else
 	for (i = 0; i < prog->externals.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->externals.variables[i].name == offsets[j]) {
-				assert(transforms[j] != 0x7fffffff);
-				prog->externals.variables[i].name = transforms[j];
-				break;
-			}
-		}
+		ShiftName(&prog->externals.variables[i].name, entries, transforms, offsets);
 	}
 	for (i = 0; i < prog->variables.numVariables; i++) {
-		for (j = 0; j < entries; j++) {
-			if (prog->variables.variables[i].name == offsets[j]) {
-				assert(transforms[j] != 0x7fffffff);
-				prog->variables.variables[i].name = transforms[j];
-				break;
-			}
-		}
+		ShiftName(&prog->variables.variables[i].name, entries, transforms, offsets);
 	}
 	for (i = 0; i < prog->procedures.numProcedures; i++) {
-		proc = &prog->procedures.procedures[i];
-		for (j = 0; j < entries; j++) {
-			if (proc->name == offsets[j]) {
-				assert(transforms[j] != 0x7fffffff);
-				proc->name = transforms[j];
-				break;
-			}
-		}
+		ShiftName(&prog->procedures.procedures[i].name, entries, transforms, offsets);
 	}
 
 	FreeNamelistData(refs, offsets, transforms);
@@ -1232,27 +1226,46 @@ static int* GetStringReference(Node *node, Program *prog) {
 	return 0;
 }
 
+static void SetVariableDefaultValueReferenced(Variable* var, int entries, int* refs, int* offsets, int refType) {
+	if (var->initialized && var->value.type == V_STRING) {
+		SetNameReferenced(var->value.stringData, entries, refs, offsets, refType);
+	}
+}
+
+static void ShiftVariableDefaultValue(Variable* var, int entries, int* transforms, int* offsets) {
+	if (var->initialized && var->value.type == V_STRING) {
+		ShiftName(&var->value.stringData, entries, transforms, offsets);
+	}
+}
+
 static void CompressStringspace(Program *prog) {
 	if (!prog->stringspace) return;
 
 	char* endptr;
-	int entries = 0, *refs, *offsets, *transforms, i, j, k, *stringData;
+	int entries = 0, *refs, *offsets, *transforms, i, k, *stringData;
 	Procedure* proc;
 	Node* node;
 
 	GetNamelistData(prog->stringspace, &entries, &endptr, &refs, &offsets, &transforms);
 
-	//Then check all procedures nodes to see where in the stringspace they point
+	//Then check all procedures nodes and variable default values to see where in the stringspace they point
 	for (i = 0; i < prog->procedures.numProcedures; i++) {
 		proc = &prog->procedures.procedures[i];
 		for (k = 0; k < proc->nodes.numNodes; k++) {
 			node = &proc->nodes.nodes[k];
 			if (stringData = GetStringReference(node, prog)) {
-				for (j = 0; j < entries; j++) {
-					if (*stringData == offsets[j]) refs[j] = 1;
-				}
+				SetNameReferenced(*stringData, entries, refs, offsets, 1);
 			}
 		}
+		for (k = 0; k < proc->variables.numVariables; k++) {
+			SetVariableDefaultValueReferenced(&proc->variables.variables[k], entries, refs, offsets, 2);
+		}
+	}
+	for (i = 0; i < prog->externals.numVariables; i++) {
+		SetVariableDefaultValueReferenced(&prog->externals.variables[i], entries, refs, offsets, 4);
+	}
+	for (i = 0; i < prog->variables.numVariables; i++) {
+		SetVariableDefaultValueReferenced(&prog->externals.variables[i], entries, refs, offsets, 8);
 	}
 	//For each string that isn't referenced, remove it
 	for (i = entries - 1; i >= 0; i--) {
@@ -1266,16 +1279,18 @@ static void CompressStringspace(Program *prog) {
 		for (k = 0; k < proc->nodes.numNodes; k++) {
 			node = &proc->nodes.nodes[k];
 			if (stringData = GetStringReference(node, prog)) {
-				for (j = 0; j < entries; j++) {
-					if (*stringData == offsets[j]) {
-						assert(transforms[j] != 0x7fffffff);
-						*stringData = transforms[j];
-						break;
-					}
-				}
+				ShiftName(stringData, entries, transforms, offsets);
 			}
 		}
-		
+		for (k = 0; k < proc->variables.numVariables; k++) {
+			ShiftVariableDefaultValue(&proc->variables.variables[k], entries, transforms, offsets);
+		}
+	}
+	for (i = 0; i < prog->externals.numVariables; i++) {
+		ShiftVariableDefaultValue(&prog->externals.variables[i], entries, transforms, offsets);
+	}
+	for (i = 0; i < prog->variables.numVariables; i++) {
+		ShiftVariableDefaultValue(&prog->variables.variables[i], entries, transforms, offsets);
 	}
 
 	FreeNamelistData(refs, offsets, transforms);
