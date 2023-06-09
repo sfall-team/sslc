@@ -946,6 +946,10 @@ static void DecendUnusedProcedures(Program *prog) {
 	}
 }*/
 
+static int IsProcedureReference(Node* node) {
+	return node->token == T_SYMBOL && ((node->value.type & (P_PROCEDURE | P_LOCAL)) == (P_PROCEDURE | P_LOCAL));
+}
+
 static void UpdateProcedureReferences(Procedure* procs, int count) {
 	int i, j, matched = 1;
 	Node* node;
@@ -961,7 +965,7 @@ static void UpdateProcedureReferences(Procedure* procs, int count) {
 			procs[i].uses = 2;
 			for (j = 0; j < procs[i].nodes.numNodes; j++) {
 				node = &procs[i].nodes.nodes[j];
-				if (node->token == T_SYMBOL && node->value.type & (P_PROCEDURE | P_LOCAL)) {
+				if (IsProcedureReference(node)) {
 					if (!procs[node->value.intData].uses) {
 						matched = 1;
 						procs[node->value.intData].uses = 1;
@@ -971,7 +975,7 @@ static void UpdateProcedureReferences(Procedure* procs, int count) {
 			if (procs[i].type & P_CONDITIONAL) {
 				for (j = 0; j < procs[i].condition.numNodes; j++) {
 					node = &procs[i].condition.nodes[j];
-					if (node->token == T_SYMBOL && node->value.type & (P_PROCEDURE | P_LOCAL)) {
+					if (IsProcedureReference(node)) {
 						if (!procs[node->value.intData].uses) {
 							matched = 1;
 							procs[node->value.intData].uses = 1;
