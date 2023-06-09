@@ -1219,6 +1219,8 @@ static void CompressNamelist(Program *prog) {
 }
 
 static void CompressStringspace(Program *prog) {
+	if (!prog->stringspace) return;
+
 	char* endptr;
 	int entries = 0, *refs, *offsets, *transforms, i, j, k;
 	Procedure* proc;
