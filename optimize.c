@@ -158,7 +158,7 @@ static void FindVarUsage(const Node* node, VarUsage* usage, int varCount) {
 			}
 			break;
 		case T_CALL:
-			if ((++node)->token == T_SYMBOL && ((var = LookupVariable(node)) != -1)) {
+			if ((node + 1)->token == T_SYMBOL && ((var = LookupVariable(node + 1)) != -1)) {
 				MarkVariableRead(usage, var, currstatement, whiledepth);
 			}
 			break;
