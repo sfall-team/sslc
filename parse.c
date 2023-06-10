@@ -973,11 +973,12 @@ void emitNode(Procedure *p, NodeList *n, LexData *data) {
 				else referenceVariable(&currentProgram->variables, v);
 			}
 			else {
+				Procedure *proc;
 				type |= P_PROCEDURE;
 				referenceProcedure(&currentProgram->procedures, v);
 				if (data->type == T_STRING) {
 					type |= P_STRINGIFY;
-					Procedure *proc = &currentProgram->procedures.procedures[v];
+					proc = &currentProgram->procedures.procedures[v];
 					// Add stringified procedure name (because program has separate namelist of string constants)
 					if (!proc->stringifiedName) {
 						proc->stringifiedName = addString(&currentProgram->stringspace, data->stringData);

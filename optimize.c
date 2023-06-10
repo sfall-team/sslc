@@ -1135,10 +1135,11 @@ static void FreeNamelistData(int* refs, int* offsets, int* transforms) {
 }
 
 static void RemoveFromNamelist(char* namelist, int i, int entries, int* offsets, int* transforms, char** endptr, char* logFormat) {
-	int j;
+	char* namestart;
+	int j, len;
 	parseMessageAtNode(0, logFormat, namelist + offsets[i]);
-	char* namestart = namelist + offsets[i] - 2;
-	int len = *(unsigned short*)namestart + 2;
+	namestart = namelist + offsets[i] - 2;
+	len = *(unsigned short*)namestart + 2;
 	memmove(namestart, len + namestart, *endptr - (len + namestart));
 	(*(unsigned int*)namelist) -= len;
 	*endptr -= len;
@@ -1170,7 +1171,7 @@ static void ShiftName(int* name, int entries, int* transforms, int* offsets) {
 
 static void CompressNamelist(Program *prog) {
 	char* endptr, *namestart;
-	int entries = 0, *refs, *offsets, *transforms, i, j;
+	int entries = 0, *refs, *offsets, *transforms, i, j, len;
 
 	GetNamelistData(prog->namelist, &entries, &endptr, &refs, &offsets, &transforms);
 
@@ -1188,9 +1189,9 @@ static void CompressNamelist(Program *prog) {
 	for (i = entries - 1; i >= 0; i--) {
 		if (!refs[i]) {
 			RemoveFromNamelist(prog->namelist, i, entries, offsets, transforms, &endptr, "Removing unused string '%s' from program namespace");
-		} else if (refs[i] == 2 && optimize>=3) {
+		} else if (refs[i] == 2 && optimize >= 3) {
 			namestart = prog->namelist + offsets[i] - 2;
-			int len = *(unsigned short*)namestart + 2;
+			len = *(unsigned short*)namestart + 2;
 			if (len > 4) {
 				parseMessageAtNode(0, "Shortening non-visible string '%s' in program namespace", prog->namelist + offsets[i]);
 				*(unsigned short*)(namestart) = 2;
@@ -1239,12 +1240,12 @@ static void ShiftVariableDefaultValue(Variable* var, int entries, int* transform
 }
 
 static void CompressStringspace(Program *prog) {
-	if (!prog->stringspace) return;
-
 	char* endptr;
 	int entries = 0, *refs, *offsets, *transforms, i, k, *stringData;
 	Procedure* proc;
 	Node* node;
+
+	if (!prog->stringspace) return;
 
 	GetNamelistData(prog->stringspace, &entries, &endptr, &refs, &offsets, &transforms);
 
