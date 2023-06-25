@@ -1012,6 +1012,27 @@ static void logical_expression(Procedure *p, NodeList *nodes);
 static void parseFuncArgs(Procedure *p, NodeList *nodes, Procedure *q);
 static int isExpectingProcArg();
 
+static void parseVariableRef(Procedure *p, NodeList *nodes, LexData* d, int refSyntax) {
+	if (refSyntax)
+		parseSemanticError("Can only stringify procedures.");
+	if (expectToken('(') != -1) { // function call
+		ungetToken();
+		emitOp(p, nodes, T_CALL_FUNC);
+		emitNode(p, nodes, d);
+		emitOp(p, nodes, T_START_EVENT);
+		parseFuncArgs(p, nodes, 0);
+		emitOp(p, nodes, T_END_EVENT);
+	}
+	else {
+		if (expectToken('[') != -1 || expectToken('.') != -1) {
+			parseArrayDereference(p, nodes, *d, 0);
+		}
+		else {
+			emitNode(p, nodes, d);
+		}
+	}
+}
+
 static void factor(Procedure *p, NodeList *nodes) {
 	int i, refSyntax = 0;
 
@@ -1037,24 +1058,7 @@ static void factor(Procedure *p, NodeList *nodes) {
 		// local?
 		LexData d = lexData;
 		if (findVariableIndex(lexData.stringData, &p->variables, p->namelist) != -1) {
-			if (refSyntax)
-				parseSemanticError("Can only stringify procedures.");
-			if (expectToken('(') != -1) { // function call
-				ungetToken();
-				emitOp(p, nodes, T_CALL_FUNC);
-				emitNode(p, nodes, &d);
-				emitOp(p, nodes, T_START_EVENT);
-				parseFuncArgs(p, nodes, 0);
-				emitOp(p, nodes, T_END_EVENT);
-			}
-			else {
-				if (expectToken('[') != -1 || expectToken('.') != -1) {
-					parseArrayDereference(p, nodes, d, 0);
-				}
-				else {
-					emitNode(p, nodes, &d);
-				}
-			}
+			parseVariableRef(p, nodes, &d, refSyntax);
 		}
 		else {
 			Procedure *q;
@@ -1076,37 +1080,10 @@ static void factor(Procedure *p, NodeList *nodes) {
 				}
 			}
 			else if (findVariableIndex(lexData.stringData, &currentProgram->variables, currentProgram->namelist) != -1) {
-				if (refSyntax)
-					parseSemanticError("Can only stringify procedures.");
-				if (expectToken('(') != -1) { // function call
-					ungetToken();
-					emitOp(p, nodes, T_CALL_FUNC);
-					emitNode(p, nodes, &d);
-					emitOp(p, nodes, T_START_EVENT);
-					parseFuncArgs(p, nodes, 0);
-					emitOp(p, nodes, T_END_EVENT);
-				}
-				else {
-					if (expectToken('[') != -1 || expectToken('.') != -1) {  // global var
-						parseArrayDereference(p, nodes, d, 0);
-					}
-					else
-						emitNode(p, nodes, &d);
-				}
+				parseVariableRef(p, nodes, &d, refSyntax);
 			}
 			else if (findVariableIndex(lexData.stringData, &currentProgram->externals, currentProgram->namelist) != -1) {
-				if (refSyntax)
-					parseSemanticError("Can only stringify procedures.");
-				if (expectToken('(') != -1) { // function call
-					ungetToken();
-					emitOp(p, nodes, T_CALL_FUNC);
-					emitNode(p, nodes, &d);
-					emitOp(p, nodes, T_START_EVENT);
-					parseFuncArgs(p, nodes, 0);
-					emitOp(p, nodes, T_END_EVENT);
-				}
-				else
-					emitNode(p, nodes, &d);
+				parseVariableRef(p, nodes, &d, refSyntax);
 			}
 			else {
 				parseSemanticError("Undefined symbol %s in factor\n", lexData.stringData);
