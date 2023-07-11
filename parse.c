@@ -696,7 +696,7 @@ static void copyVariables(VariableList *to, char **toNames, VariableList *from, 
 
 static int externProcedure(ProcedureList *pl, char **namelist, int type) {
 	Procedure *p;
-	int numArgs = 0;
+	int numArgs = 0, minArgs = 0;
 	char *argNames = 0, *tmpNames = 0;
 	VariableList args;
 
@@ -725,13 +725,20 @@ static int externProcedure(ProcedureList *pl, char **namelist, int type) {
 	}
 
 	if (expectToken('(') != -1) {
-		int i;
+		int i, optionalPart = 0;
 		i = lex();
 		while (i != ')') {
 			if (i != T_VARIABLE)
 				parseError("'variable' expected.");
 			ungetToken();
 			variable(&args, &argNames, V_LOCAL, 0, 0);
+			if (args.variables[args.numVariables - 1].initialized) {
+				optionalPart = 1;
+			} else {
+				if (optionalPart)
+					parseSemanticError("Optional arguments must not precede required arguments.");
+				minArgs++;
+			}
 			i = lex();
 			if (i != ')') {
 				if (i != ',')
@@ -745,7 +752,8 @@ static int externProcedure(ProcedureList *pl, char **namelist, int type) {
 	if (expectToken(';') == -1)
 		parseError("Can't define procedures in an import or export block");
 
-	p->numArgs = p->minArgs = numArgs;
+	p->numArgs = numArgs;
+	p->minArgs = minArgs;
 	p->deftype = 1;
 	p->type |= type;
 	if (type | P_EXPORT)
@@ -1852,7 +1860,6 @@ int procedure(void) {
 		parseSemanticError("inline procedures cannot be imported or exported");
 	}
 
-	//emitOp(p, &p->nodes, T_BEGIN);
 	parseBlock(p);
 
 	if (!optimize || !(p->type & P_INLINE)) {

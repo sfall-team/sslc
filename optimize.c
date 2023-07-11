@@ -1311,8 +1311,9 @@ void optimizeTree(Program *prog) {
 			matched = 0;
 			DecendUnusedProcedures(prog);
 			for (i = 1; i <prog->procedures.numProcedures; i++) {
-				if (prog->procedures.procedures[i].type & P_IMPORT) continue;
-				OptimizeProcedure(&prog->procedures.procedures[i]);
+				Procedure* proc = &prog->procedures.procedures[i];
+				if ((proc->type & P_IMPORT) || proc->deftype != 2) continue;
+				OptimizeProcedure(proc);
 			}
 			DecendUnusedProcedures(prog);
 			matched |= ConstantPropagateGlobals(prog);
