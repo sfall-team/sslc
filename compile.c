@@ -29,7 +29,7 @@ FILE *parseroutput;
 #define FINDNEXT(x, y) _findnext(x, y)
 #define FINDCLOSE(x, y) _findclose(x)
 #define FINDHANDLE long
-//	#define BAD_HANDLE -1
+//#define BAD_HANDLE -1
 
 #if defined(_MSC_VER)
 #define FIND_SUCCESS(x)	((x) != -1)
@@ -44,12 +44,12 @@ static void PrintLogo() {
 		"Copyright (c) 1998, 2002-2008 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>\n"
 		"All rights reserved.\n\n"
 #else
-		"Win2K/Lite version (no built-in preprocessor)\n\n"
+		"Win2K/Lite version (with no built-in preprocessor)\n\n"
 #endif
 	);
 }
 
-extern int warn_level; //the mcpp warning level
+extern int warn_level; // the mcpp warning level
 extern int mcpp_lib_main(FILE *fin, FILE *fout, const char* in_file, const char* dir, const char* def, const char* include_dir);
 extern void mcpp_add_include_dir(char*);
 
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 #ifdef BUILDING_DLL
 
 static int inited=0;
-// old parser
+
 int _stdcall parse_main(const char *filePath, const char* origPath, const char* dir/*, const char* def, const char* include_dir, int backMode*/) {
 	InputStream foo;
 	char tmpbuf[260];

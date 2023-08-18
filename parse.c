@@ -475,8 +475,10 @@ static void assignVariable(VariableList *v, int which, LexData *what) {
 static void reference(int* numrefs, int** refs) {
 	if (!*refs) {
 		*refs = (int*)malloc(8 * 8);
+//#ifndef BUILDING_DLL // Fakels: fixes list of references for sfall Script Editor Ext
 	} else if (refs[0][numrefs[0] * 2 - 2] == lexGetLineno(currentInputStream) && refs[0][numrefs[0] * 2 - 1] == (int)lexGetFilename(currentInputStream)) {
 		return;
+//#endif
 	} else if (!(numrefs[0] % 8)) {
 		*refs = (int*)realloc(*refs, (numrefs[0] + 9) * 8);
 	}
@@ -560,7 +562,7 @@ static int defineVariable(VariableList *v, char **namelist, int type, ArrayVarLi
 
 	do {
 		if (expectToken(T_SYMBOL) == -1)
-			parseError("Expecting symbol.");
+			parseError("Expecting name symbol.");
 		symbol = lexData;
 
 		if (findName(*namelist, lexData.stringData) != -1)
@@ -897,7 +899,7 @@ static int variable(VariableList *v, char **names, int type, ArrayVarList* array
 			if (defineVariable(v, names, type, arrays, allowMulti))
 				return 1;
 		} else
-			parseError("Expected symbol or 'begin' block.");
+			parseError("Expected variable name symbol or 'begin' block.");
 	} while (expectToken(T_VARIABLE) != -1);
 
 	ungetToken();  // put back what was there
@@ -914,7 +916,7 @@ static int VariableParse(VariableList *v, char **names, int type, ArrayVarList* 
 			ungetToken();
 			if (defineVariable(v, names, type, arrays, 1)) return 1;
 		} else
-			parseError("Expected symbol.");
+			parseError("Expected variable name symbol.");
 	} while (expectToken(T_VARIABLE) != -1);
 
 	ungetToken();  // put back what was there
@@ -1556,7 +1558,7 @@ static void parseStatementInternal(Procedure *p, char requireSemicolon) {
 					if (FindSymbolName(p, &lexData))
 						parseError("Assignment operator expected.");
 					else
-						parseSemanticError("Unknown identifier %s.", lexData.stringData);
+						parseSemanticError("Unknown name identifier %s.", lexData.stringData);
 				}
 				break;
 			}
