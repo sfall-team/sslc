@@ -74,17 +74,21 @@ int main(int argc, char **argv)
 		parseOutput("  -b    use backward compatibility mode\n");
 		parseOutput("  -l    no logo\n");
 #ifndef WIN2K
-		parseOutput("  -p    preprocess\n");
-		parseOutput("  -P    preprocess only. (Don't generate .int)\n");
+		parseOutput("  -p    preprocess source\n");
+		parseOutput("  -P    preprocess only (don't generate .int)\n");
 		parseOutput("  -F    write full file paths in #line directives\n");
 #endif
-		parseOutput("  -O<level> optimize (0 - none, 1 - only remove unreferenced globals (default), 2 - full, 3 - full+experimental, don't use!)\n");
+		parseOutput("  -O<level>  optimize code\n");
+		parseOutput("             0 - none\n");
+		parseOutput("             1 - only remove unreferenced variables/procedures (default)\n");
+		parseOutput("             2 - full (same as -O)\n");
+		parseOutput("             3 - full+experimental, don't use!\n");
 		parseOutput("  -d    show debug info\n");
 		parseOutput("  -s    enable short-circuit evaluation for boolean operators (AND, OR)\n");
 		parseOutput("  -D    dump abstract syntax tree after optimizations\n");
 #ifndef WIN2K
-		parseOutput("  -m<macro[=val]> define a macro named \"macro\" for conditional compilation\n");
-		parseOutput("  -I<path> specify an additional directory to search for include files\n");
+		parseOutput("  -m<macro>[=<val>]  define a macro named \"macro\" for conditional compilation\n");
+		parseOutput("  -I<path>  specify an additional directory to search for include files\n");
 #endif
 		return 1;
 	}
