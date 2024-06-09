@@ -442,7 +442,7 @@ int writeExpression(NodeList *n, int i, FILE *f) {
 	if (n->nodes[i++].token != T_START_EXPRESSION)
 		parseError("start-expression expected.");
 
-	while(n->nodes[i].token != T_END_EXPRESSION) {
+	while (n->nodes[i].token != T_END_EXPRESSION && i < n->numNodes) {
 		if (n->nodes[i].token == T_CALL_FUNC) {
 			int args;
 			int proc = n->nodes[i+1].value.intData;

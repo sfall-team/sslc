@@ -350,20 +350,23 @@ void parseForEach(Procedure *p, NodeList *n) {
 
 void parseSwitch(Procedure *p, NodeList *n) {
 	LexData symbol;
-	int cases=0;
-	if(expectToken(T_SYMBOL)==-1) {
+	NodeList tmpN;
+	int cases = 0, subCases = 0;
+	
+	if (expectToken(T_SYMBOL) == -1) {
 		GenTmpVar(p, &symbol);
 		emitNode(p, n, &symbol);
 		emitOp(p, n, T_ASSIGN);
 		parseExpression(p, n);
 		emitOp(p, n, T_END_STATEMENT);
 		emitOp(p, n, T_START_STATEMENT);
-	} else {
+	}
+	else {
 		CloneLexData(&symbol, &lexData);
 	}
-	if(expectToken(T_BEGIN)==-1) parseError("Expected begin");
-	while(expectToken(T_CASE)!=-1) {
-		if(cases) {
+	if (expectToken(T_BEGIN) == -1) parseError("Expected begin");
+	while (expectToken(T_CASE) != -1) {
+		if (cases) {
 			emitOp(p, n, T_ELSE);
 			emitOp(p, n, T_START_STATEMENT);
 			emitOp(p, n, T_BEGIN);
@@ -371,37 +374,58 @@ void parseSwitch(Procedure *p, NodeList *n) {
 		}
 		emitOp(p, n, T_IF);
 		emitOp(p, n, T_START_EXPRESSION);
-		emitNode(p, n, &symbol);
-		parseExpression(p, n);
-		emitOp(p, n, T_EQUAL);
+		
+		tmpN.nodes = 0;
+		tmpN.numNodes = 0;
+		do {
+			if (subCases > 0) {
+				emitOp(p, n, T_START_EXPRESSION);
+
+				emitOp(p, &tmpN, T_END_EXPRESSION);
+				emitOp(p, &tmpN, T_OR);
+				emitOp(p, &tmpN, T_START_EXPRESSION);
+			}
+		
+			emitNode(p, &tmpN, &symbol);
+			parseExpression(p, &tmpN);
+			emitOp(p, &tmpN, T_EQUAL);
+
+			if (expectToken(':') == -1) parseError("Expected ':'");
+			++subCases;
+		} while (expectToken(T_CASE) != -1);
+		
+		appendNodeList(n, &tmpN);
+		while (--subCases > 0) {
+			emitOp(p, n, T_END_EXPRESSION);
+		}
+		
 		emitOp(p, n, T_END_EXPRESSION);
 		emitOp(p, n, T_THEN);
 		emitOp(p, n, T_START_STATEMENT);
 		emitOp(p, n, T_BEGIN);
-		if(expectToken(':')==-1) parseError("Expected ':'");
-		while(expectToken(T_EOF)==-1&&expectToken(T_CASE)==-1&&expectToken(T_DEFAULT)==-1&&expectToken(T_END)==-1) parseStatement(p);
+		while (expectToken(T_EOF) == -1 && expectToken(T_CASE) == -1 && expectToken(T_DEFAULT) == -1 && expectToken(T_END) == -1) parseStatement(p);
 		ungetToken();
 		emitOp(p, n, T_END);
 		emitOp(p, n, T_END_STATEMENT);
 		cases++;
 	}
-	if(cases&&expectToken(T_DEFAULT)!=-1) {
-		if(expectToken(':')==-1) parseError("Expected ':'");
+	if (cases && expectToken(T_DEFAULT) != -1) {
+		if (expectToken(':') == -1) parseError("Expected ':'");
 		emitOp(p, n, T_ELSE);
 		emitOp(p, n, T_START_STATEMENT);
 		emitOp(p, n, T_BEGIN);
-		while(expectToken(T_EOF)==-1&&expectToken(T_CASE)==-1&&expectToken(T_DEFAULT)==-1&&expectToken(T_END)==-1) parseStatement(p);
+		while (expectToken(T_EOF) == -1 && expectToken(T_CASE) == -1 && expectToken(T_DEFAULT) == -1 && expectToken(T_END) == -1) parseStatement(p);
 		ungetToken();
 		emitOp(p, n, T_END);
 		emitOp(p, n, T_END_STATEMENT);
 	}
-	if(!cases) parseSemanticError("switch statement with no cases");
-	while(--cases) {
+	if (!cases) parseSemanticError("switch statement with no cases");
+	while (--cases) {
 		emitOp(p, n, T_END_STATEMENT);
 		emitOp(p, n, T_END);
 		emitOp(p, n, T_END_STATEMENT);
 	}
-	if(expectToken(T_END)==-1) parseError("Expected end");
+	if (expectToken(T_END) == -1) parseError("Expected end");
 }
 
 void parseAssocArrayConstant(Procedure *p, NodeList *n) {
