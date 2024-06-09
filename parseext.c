@@ -205,34 +205,45 @@ void parseFor(Procedure *p, NodeList *n) {
 
 void parseForEach(Procedure *p, NodeList *n) {
 	LexData symbolKey, symbolVal, a, len, count;
-	char hasKey = 0, emitEnd = 0, hasParan = 0;
+	char hasKey = 0, emitEnd = 0, hasParan = 0, isSymbol = 0, addVars = 0;
 	if (expectToken('(') != -1) {
 		hasParan = 1;
 	}
+	if (expectToken(T_VARIABLE) != -1) {
+		addVars = 1;
+	}
 	if (expectToken(T_SYMBOL) == -1) parseError("Expected symbol");
 	CloneLexData(&symbolVal, &lexData);
+	if (addVars && addVariable(&p->variables, &p->namelist, V_LOCAL, lexData.stringData) == -1) {
+		parseSemanticError("Couldn't add variable %s.", lexData.stringData);
+	}
 	if (expectToken(':') != -1) {
 		symbolKey = symbolVal;
 		if(expectToken(T_SYMBOL) == -1) parseError("Expected symbol for value");
 		CloneLexData(&symbolVal, &lexData);
+		if (addVars && addVariable(&p->variables, &p->namelist, V_LOCAL, lexData.stringData) == -1) {
+			parseSemanticError("Couldn't add variable %s.", lexData.stringData);
+		}
 		hasKey = 1;
 	}
 
 	if (expectToken(T_IN) == -1) parseError("Expected 'in'");
-	if (expectToken(T_SYMBOL) == -1) {
+	isSymbol = expectToken(T_SYMBOL) != -1;
+	if (isSymbol && findVariableIndex(lexData.stringData, &p->variables, p->namelist) != -1) {
+		CloneLexData(&a, &lexData);
+	} else {
+		if (isSymbol) ungetToken();
 		GenTmpVar(p, &a);
 		emitOp(p, n, T_START_STATEMENT);
 		emitNode(p, n, &a);
 		emitOp(p, n, T_ASSIGN);
 		parseExpression(p, n);
 		emitOp(p, n, T_END_STATEMENT);
-	} else {
-		CloneLexData(&a, &lexData);
 	}
 
 	GenTmpVar(p, &len);
 	GenTmpVar(p, &count);
-	if (!hasKey) GenTmpVar(p, &symbolKey);
+	if (!hasKey && !addVars) GenTmpVar(p, &symbolKey);
 
 	//count:=0;
 	emitOp(p, n, T_START_STATEMENT);

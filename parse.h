@@ -45,7 +45,6 @@ typedef struct {
    int numRefs;
    Value value;
    int type;   // this type is where it was declared
-   int arrayLen;
    int declared;
    const char* fdeclared;
    int uses;
@@ -153,6 +152,9 @@ extern int expectToken(int expectToken);
 
 extern void freeCurrentProgram(void);
 extern char *getName(int offset, char *namelist);
+
+extern int addVariable(VariableList *var, char **namelist, int type, char *name);
+extern int findVariableIndex(char *var, VariableList *v, char *namelist);
 
 #define P_GLOBAL    0x80000000
 #define P_LOCAL     0x40000000

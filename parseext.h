@@ -5,17 +5,6 @@
 	Extended SSL syntax for sfall
 */
 
-typedef struct {
-	char* name;
-	int len;
-	int datasize;
-} ArrayVar;
-typedef struct {
-	ArrayVar* vars;
-	int count;
-	int size;
-} ArrayVarList;
-
 void appendNodeListPart(NodeList* dst, const NodeList* src, int offset, int length);
 void appendNodeList(NodeList* dst, const NodeList* src);
 
