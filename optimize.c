@@ -1217,12 +1217,9 @@ static void CompressNamelist(Program *prog) {
 	FreeNamelistData(refs, offsets, transforms);
 }
 
-static int* GetStringReference(Node *node, Program *prog) {
+static int* GetStringOffsetRef(Node *node, Program *prog) {
 	if (node->token == T_CONSTANT && node->value.type == V_STRING) {
 		return &node->value.stringData;
-	}
-	else if (node->token == T_SYMBOL && node->value.type & P_STRINGIFY) {
-		return &prog->procedures.procedures[node->value.intData].stringifiedName;
 	}
 	return 0;
 }
@@ -1254,7 +1251,7 @@ static void CompressStringspace(Program *prog) {
 		proc = &prog->procedures.procedures[i];
 		for (k = 0; k < proc->nodes.numNodes; k++) {
 			node = &proc->nodes.nodes[k];
-			if (stringData = GetStringReference(node, prog)) {
+			if (stringData = GetStringOffsetRef(node, prog)) {
 				SetNameReferenced(*stringData, entries, refs, offsets, 1);
 			}
 		}
@@ -1268,6 +1265,10 @@ static void CompressStringspace(Program *prog) {
 	for (i = 0; i < prog->variables.numVariables; i++) {
 		SetVariableDefaultValueReferenced(&prog->variables.variables[i], entries, refs, offsets, 8);
 	}
+	//Handle stringified names
+	for (i = 0; i < prog->procedures.numProcedures; i++) {
+		SetNameReferenced(prog->procedures.procedures[i].stringifiedName, entries, refs, offsets, 16);
+	}
 	//For each string that isn't referenced, remove it
 	for (i = entries - 1; i >= 0; i--) {
 		if (!refs[i]) {
@@ -1279,7 +1280,7 @@ static void CompressStringspace(Program *prog) {
 		proc = &prog->procedures.procedures[i];
 		for (k = 0; k < proc->nodes.numNodes; k++) {
 			node = &proc->nodes.nodes[k];
-			if (stringData = GetStringReference(node, prog)) {
+			if (stringData = GetStringOffsetRef(node, prog)) {
 				ShiftName(stringData, entries, transforms, offsets);
 			}
 		}
@@ -1292,6 +1293,10 @@ static void CompressStringspace(Program *prog) {
 	}
 	for (i = 0; i < prog->variables.numVariables; i++) {
 		ShiftVariableDefaultValue(&prog->variables.variables[i], entries, transforms, offsets);
+	}
+	//Handle stringified names
+	for (i = 0; i < prog->procedures.numProcedures; i++) {
+		ShiftName(&prog->procedures.procedures[i].stringifiedName, entries, transforms, offsets);
 	}
 
 	FreeNamelistData(refs, offsets, transforms);
