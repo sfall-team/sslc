@@ -7,6 +7,7 @@
 #include "parseext.h"
 
 extern int loopNesting;
+extern Program *currentProgram;
 
 // vars, constants, etc.
 void emitNodeExpr(Procedure *p, NodeList *n, LexData *data) {
@@ -229,7 +230,9 @@ void parseForEach(Procedure *p, NodeList *n) {
 
 	if (expectToken(T_IN) == -1) parseError("Expected 'in'");
 	isSymbol = expectToken(T_SYMBOL) != -1;
-	if (isSymbol && findVariableIndex(lexData.stringData, &p->variables, p->namelist) != -1) {
+	if (isSymbol && (findVariableIndex(lexData.stringData, &p->variables, p->namelist) != -1
+			|| findVariableIndex(lexData.stringData, &currentProgram->variables, currentProgram->namelist) != -1
+			|| findVariableIndex(lexData.stringData, &currentProgram->externals, currentProgram->namelist) != -1)) {
 		CloneLexData(&a, &lexData);
 	} else {
 		if (isSymbol) ungetToken();

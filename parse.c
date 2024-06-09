@@ -45,7 +45,7 @@ void optimizeTree(Program *program);
 * to the parentheses.
 * etc.
 */
-static Program *currentProgram;
+Program *currentProgram;
 static Procedure *currentProcedure;
 static InputStream *currentInputStream;
 static InputStream *includes[32];
