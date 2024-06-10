@@ -590,22 +590,32 @@ static int defineVariable(VariableList *v, char **namelist, int type, char allow
 		} else if (expectToken(T_ASSIGN) != -1) {
 			char buf[1024];
 			int allowExpr = (allowMulti && type == V_LOCAL);
+			
 			strcpy(buf, symbol.stringData);
 			symbol.stringData = buf;
-			if (expectToken(T_CONSTANT) == -1) {
-				if (allowExpr) {
-					emitOp(currentProcedure, &currentProcedure->nodes, T_START_STATEMENT);
-					emitNode(currentProcedure, &currentProcedure->nodes, &symbol);
-					emitOp(currentProcedure, &currentProcedure->nodes, T_ASSIGN);
-					parseExpression(currentProcedure, &currentProcedure->nodes);
-					emitOp(currentProcedure, &currentProcedure->nodes, T_END_STATEMENT);
-				} else {
-					LexData assignConstant;
-					constantExpression(&assignConstant);
-					assignVariable(v, i, &assignConstant);
+
+			if (allowExpr) {
+				NodeList tmpN = { 0, 0 };
+				p = currentProcedure;
+				parseExpression(p, &tmpN);
+				// If expression has just one constant, simply assign it as variable value, otherwise write assign statement.
+				if (tmpN.numNodes == 3 && tmpN.nodes[1].token == T_CONSTANT) {
+					v->variables[i].value = tmpN.nodes[1].value;
+					v->variables[i].initialized = 1;
 				}
-			} else
-				assignVariable(v, i, &lexData);
+				else {
+					emitOp(p, &p->nodes, T_START_STATEMENT);
+					emitNode(p, &p->nodes, &symbol);
+					emitOp(p, &p->nodes, T_ASSIGN);
+					appendNodeList(&p->nodes, &tmpN);
+					emitOp(p, &p->nodes, T_END_STATEMENT);
+				}
+				free(tmpN.nodes);
+			} else {
+				LexData assignConstant;
+				constantExpression(&assignConstant);
+				assignVariable(v, i, &assignConstant);
+			}
 		}
 	} while (allowMulti && expectToken(',') != -1);
 	if (expectToken(';') == -1) {
