@@ -45,6 +45,7 @@ typedef struct {
    int numRefs;
    Value value;
    int type;   // this type is where it was declared
+   int arrayLen; // OBSOLETE, kept for compatibility with Sfall Script Editor
    int declared;
    const char* fdeclared;
    int uses;
