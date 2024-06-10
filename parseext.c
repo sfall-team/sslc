@@ -253,7 +253,7 @@ void parseForEach(Procedure *p, NodeList *n) {
 
 	GenTmpVar(p, &len);
 	GenTmpVar(p, &count);
-	if (!hasKey && !addVars) GenTmpVar(p, &symbolKey);
+	if (!hasKey) GenTmpVar(p, &symbolKey);
 
 	//count:=0;
 	emitOp(p, n, T_START_STATEMENT);
