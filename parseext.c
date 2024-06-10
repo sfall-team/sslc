@@ -206,6 +206,7 @@ void parseFor(Procedure *p, NodeList *n) {
 
 void parseForEach(Procedure *p, NodeList *n) {
 	LexData symbolKey, symbolVal, a, len, count;
+	NodeList tmpN, arrayVar;
 	char hasKey = 0, emitEnd = 0, hasParan = 0, isSymbol = 0, addVars = 0;
 	if (expectToken('(') != -1) {
 		hasParan = 1;
@@ -229,18 +230,24 @@ void parseForEach(Procedure *p, NodeList *n) {
 	}
 
 	if (expectToken(T_IN) == -1) parseError("Expected 'in'");
-	isSymbol = expectToken(T_SYMBOL) != -1;
-	if (isSymbol && (findVariableIndex(lexData.stringData, &p->variables, p->namelist) != -1
-			|| findVariableIndex(lexData.stringData, &currentProgram->variables, currentProgram->namelist) != -1
-			|| findVariableIndex(lexData.stringData, &currentProgram->externals, currentProgram->namelist) != -1)) {
-		CloneLexData(&a, &lexData);
+
+	// Optimization: if expression is simple variable access, use it directly in loop body without temp var.
+	tmpN.nodes = 0;
+	tmpN.numNodes = 0;
+	arrayVar.nodes = 0;
+	arrayVar.numNodes = 0;
+	parseExpression(p, &tmpN);
+	if (tmpN.numNodes == 3 && tmpN.nodes[1].token == T_SYMBOL && (tmpN.nodes[1].value.type & P_PROCEDURE) == 0) {
+		appendNodeListPart(&arrayVar, &tmpN, 1, 1);
 	} else {
-		if (isSymbol) ungetToken();
 		GenTmpVar(p, &a);
+		emitNode(p, &arrayVar, &a);
+		free(a.stringData);
+
 		emitOp(p, n, T_START_STATEMENT);
-		emitNode(p, n, &a);
+		appendNodeList(n, &arrayVar);
 		emitOp(p, n, T_ASSIGN);
-		parseExpression(p, n);
+		appendNodeList(n, &tmpN);
 		emitOp(p, n, T_END_STATEMENT);
 	}
 
@@ -264,7 +271,7 @@ void parseForEach(Procedure *p, NodeList *n) {
 	emitOp(p, n, T_START_EXPRESSION);
 	emitOp(p, n, T_TS_LEN_ARRAY);
 	emitOp(p, n, T_START_EXPRESSION);
-	emitNode(p, n, &a);
+	appendNodeList(n, &arrayVar);
 	emitOp(p, n, T_END_EXPRESSION);
 	emitOp(p, n, T_END_EXPRESSION);
 	emitOp(p, n, T_END_STATEMENT);
@@ -295,7 +302,7 @@ void parseForEach(Procedure *p, NodeList *n) {
 	emitOp(p, n, T_START_EXPRESSION);
 	emitOp(p, n, T_TS_GET_ARRAY_KEY);
 	emitOp(p, n, T_START_EXPRESSION);
-	emitNode(p, n, &a);
+	appendNodeList(n, &arrayVar);
 	emitOp(p, n, T_END_EXPRESSION);
 	emitOp(p, n, T_START_EXPRESSION);
 	emitNode(p, n, &count);
@@ -310,7 +317,7 @@ void parseForEach(Procedure *p, NodeList *n) {
 	emitOp(p, n, T_START_EXPRESSION);
 	emitOp(p, n, T_TS_GET_ARRAY);
 	emitOp(p, n, T_START_EXPRESSION);
-	emitNode(p, n, &a);
+	appendNodeList(n, &arrayVar);
 	emitOp(p, n, T_END_EXPRESSION);
 	emitOp(p, n, T_START_EXPRESSION);
 	emitNode(p, n, &symbolKey);
@@ -343,9 +350,10 @@ void parseForEach(Procedure *p, NodeList *n) {
 
 	free(symbolVal.stringData);
 	free(symbolKey.stringData);
-	free(a.stringData);
 	free(len.stringData);
 	free(count.stringData);
+	free(tmpN.nodes);
+	free(arrayVar.nodes);
 }
 
 void parseSwitch(Procedure *p, NodeList *n) {
