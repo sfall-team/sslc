@@ -45,7 +45,7 @@ void optimizeTree(Program *program);
 * to the parentheses.
 * etc.
 */
-static Program *currentProgram;
+Program *currentProgram;
 static Procedure *currentProcedure;
 static InputStream *currentInputStream;
 static InputStream *includes[32];
@@ -59,7 +59,6 @@ static void freeVariableList(VariableList *v);
 static void freeVariable(Variable *v);
 static void parseWhile(Procedure *p, NodeList *n);
 static int writeBlock(NodeList *n, int i, FILE *f);
-static int variable(VariableList *v, char **names, int type, ArrayVarList* arrays, int allowMulti);
 
 extern FILE* parseroutput;
 
@@ -498,7 +497,7 @@ static void referenceProcedure(ProcedureList *p, int which) {
 	reference(&p->procedures[which].numRefs, &p->procedures[which].references);
 }
 
-static int addVariable(VariableList *var, char **namelist, int type, char *name) {
+int addVariable(VariableList *var, char **namelist, int type, char *name) {
 	Variable *v = var->variables;
 	int i;
 
@@ -526,7 +525,6 @@ static int addVariable(VariableList *var, char **namelist, int type, char *name)
 	v[i].uses = 0;
 	v[i].numRefs = 0;
 	v[i].references = 0;
-	v[i].arrayLen = -1;
 	v[i].initialized = 0;
 	v[i].declared = lexGetLineno(currentInputStream);
 	v[i].fdeclared = lexGetFilename(currentInputStream);
@@ -542,23 +540,10 @@ void GenTmpVar(Procedure *p, LexData* lex) {
 	addVariable(&p->variables, &p->namelist, V_LOCAL, lex->stringData);
 }
 
-static void AddArrayVar(ArrayVarList* arrays, ArrayVar* var) {
-	if (arrays->size == 0) {
-		arrays->vars = (ArrayVar*)malloc(sizeof(ArrayVar) * 4);
-		arrays->size = 4;
-	} else if (arrays->size == arrays->count) {
-		arrays->size += 4;
-		arrays->vars = (ArrayVar*)malloc(sizeof(ArrayVar) * arrays->size);
-	}
-	arrays->vars[arrays->count].name = (char*)malloc(strlen(var->name) + 1);
-	strcpy(arrays->vars[arrays->count].name, var->name);
-	arrays->vars[arrays->count].len = var->len;
-	arrays->vars[arrays->count++].datasize = var->datasize;
-}
-static int defineVariable(VariableList *v, char **namelist, int type, ArrayVarList* arrays, int allowMulti) {
-	int i;
-	ArrayVar av;
+static int defineVariable(VariableList *v, char **namelist, int type, char allowArrays, int allowMulti) {
+	int i, arraySize, arrayFlags;
 	LexData symbol;
+	Procedure* p;
 
 	do {
 		if (expectToken(T_SYMBOL) == -1)
@@ -575,42 +560,66 @@ static int defineVariable(VariableList *v, char **namelist, int type, ArrayVarLi
 			parseSemanticError("Couldn't add variable %s.", lexData.stringData);
 
 		if (expectToken('[') != -1) {
-			if (!arrays) parseSemanticError("Array variable declarations not allowed here.");
-			av.name = lexData.stringData;
-			av.datasize = 4;
+			if (!allowArrays) parseSemanticError("Array variable declarations not allowed here.");
 			if (expectToken(T_CONSTANT) == -1) parseError("Initialization of array bounds with non-constant.");
 			if (lexData.type != T_INT) parseError("Initialization of array bounds with non-integer.");
-			av.len = lexData.intData;
+			arraySize = lexData.intData;
 			if (expectToken(',') != -1) {
-				if (expectToken(T_CONSTANT) == -1) parseError("Initialization of array data size with non-constant.");
-				if (lexData.type != T_INT) parseError("Initialization of array data size with non-integer.");
-				av.datasize = lexData.intData;
+				if (expectToken(T_CONSTANT) == -1) parseError("Initialization of array flags with non-constant.");
+				if (lexData.type != T_INT) parseError("Initialization of array flags with non-integer.");
+				arrayFlags = lexData.intData;
 			}
+			else arrayFlags = 4;
+
 			if (expectToken(']') == -1) parseError("Expected ']'");
-			AddArrayVar(arrays, &av);
+
+			p = currentProcedure;
+			emitOp(p, &p->nodes, T_START_STATEMENT);
+			emitNode(p, &p->nodes, &symbol);
+			emitOp(p, &p->nodes, T_ASSIGN);
+			emitOp(p, &p->nodes, T_START_EXPRESSION);
+			emitOp(p, &p->nodes, T_TS_TEMP_ARRAY);
+			emitOp(p, &p->nodes, T_START_EXPRESSION);
+			emitInt(p, &p->nodes, arraySize);
+			emitOp(p, &p->nodes, T_END_EXPRESSION);
+			emitOp(p, &p->nodes, T_START_EXPRESSION);
+			emitInt(p, &p->nodes, arrayFlags);
+			emitOp(p, &p->nodes, T_END_EXPRESSION);
+			emitOp(p, &p->nodes, T_END_EXPRESSION);
+			emitOp(p, &p->nodes, T_END_STATEMENT);
 		} else if (expectToken(T_ASSIGN) != -1) {
 			char buf[1024];
 			int allowExpr = (allowMulti && type == V_LOCAL);
+			
 			strcpy(buf, symbol.stringData);
 			symbol.stringData = buf;
-			if (expectToken(T_CONSTANT) == -1) {
-				if (allowExpr) {
-					emitOp(currentProcedure, &currentProcedure->nodes, T_START_STATEMENT);
-					emitNode(currentProcedure, &currentProcedure->nodes, &symbol);
-					emitOp(currentProcedure, &currentProcedure->nodes, T_ASSIGN);
-					parseExpression(currentProcedure, &currentProcedure->nodes);
-					emitOp(currentProcedure, &currentProcedure->nodes, T_END_STATEMENT);
-				} else {
-					LexData assignConstant;
-					constantExpression(&assignConstant);
-					assignVariable(v, i, &assignConstant);
+
+			if (allowExpr) {
+				NodeList tmpN = { 0, 0 };
+				p = currentProcedure;
+				parseExpression(p, &tmpN);
+				// If expression has just one constant, simply assign it as variable value, otherwise write assign statement.
+				if (tmpN.numNodes == 3 && tmpN.nodes[1].token == T_CONSTANT) {
+					v->variables[i].value = tmpN.nodes[1].value;
+					v->variables[i].initialized = 1;
 				}
-			} else
-				assignVariable(v, i, &lexData);
+				else {
+					emitOp(p, &p->nodes, T_START_STATEMENT);
+					emitNode(p, &p->nodes, &symbol);
+					emitOp(p, &p->nodes, T_ASSIGN);
+					appendNodeList(&p->nodes, &tmpN);
+					emitOp(p, &p->nodes, T_END_STATEMENT);
+				}
+				free(tmpN.nodes);
+			} else {
+				LexData assignConstant;
+				constantExpression(&assignConstant);
+				assignVariable(v, i, &assignConstant);
+			}
 		}
 	} while (allowMulti && expectToken(',') != -1);
 	if (expectToken(';') == -1) {
-		if (arrays && backwardcompat == 0) parseError("Expected ';' at end of variable declaration.");
+		if (allowArrays && backwardcompat == 0) parseError("Expected ';' at end of variable declaration.");
 	}
 	return 0;
 }
@@ -780,7 +789,6 @@ static int externVariable(VariableList *v, char **namelist, int type, int flag) 
 
 	i = addVariable(v, namelist, type, lexData.stringData);
 
-	v->variables[i].arrayLen = -1;
 	v->variables[i].declared = lexGetLineno(currentInputStream);
 	v->variables[i].fdeclared = lexGetFilename(currentInputStream);
 
@@ -800,7 +808,7 @@ static int externVariable(VariableList *v, char **namelist, int type, int flag) 
 	return 0;
 }
 
-static int findVariableIndex(char *var, VariableList *v, char *namelist) {
+int findVariableIndex(char *var, VariableList *v, char *namelist) {
 	int i;
 
 	for (i = 0; i < v->numVariables; ++i) {
@@ -885,41 +893,22 @@ static int export(Program *p, char **names) {
 }
 
 /* Parse the syntax for declaring global and local variables of the procedures */
-static int variable(VariableList *v, char **names, int type, ArrayVarList* arrays, int allowMulti) {
+static int variable(VariableList *v, char **names, int type, char allowArrays, int allowMulti) {
 	if (expectToken(T_VARIABLE) == -1) return 1;
 
-	do {
-		if (expectToken(T_BEGIN) != -1) { // sfall addition
-			while (expectToken(T_END) == -1) {
-				if (defineVariable(v, names, type, arrays, allowMulti))
-					return 1;
-			}
-		} else if (expectToken(T_SYMBOL) != -1) {
-			ungetToken();
-			if (defineVariable(v, names, type, arrays, allowMulti))
+	if (expectToken(T_BEGIN) != -1) { // sfall addition
+		if (!allowMulti) parseError("Unexpected 'begin' block.");
+		while (expectToken(T_END) == -1) {
+			if (defineVariable(v, names, type, allowArrays, allowMulti))
 				return 1;
-		} else
-			parseError("Expected variable name symbol or 'begin' block.");
-	} while (expectToken(T_VARIABLE) != -1);
+		}
+	} else if (expectToken(T_SYMBOL) != -1) {
+		ungetToken();
+		if (defineVariable(v, names, type, allowArrays, allowMulti))
+			return 1;
+	} else
+		parseError("Expected variable name symbol or 'begin' block.");
 
-	ungetToken();  // put back what was there
-	return 0;
-}
-
-/*
-	Parse the syntax for declaring local variables in the procedure body without the 'begin...end' block
-	added sfall 4.2.7
-*/
-static int VariableParse(VariableList *v, char **names, int type, ArrayVarList* arrays) {
-	do {
-		if (expectToken(T_SYMBOL) != -1) {
-			ungetToken();
-			if (defineVariable(v, names, type, arrays, 1)) return 1;
-		} else
-			parseError("Expected variable name symbol.");
-	} while (expectToken(T_VARIABLE) != -1);
-
-	ungetToken();  // put back what was there
 	return 0;
 }
 
@@ -1044,7 +1033,7 @@ static void parseVariableRef(Procedure *p, NodeList *nodes, LexData* d, int refS
 }
 
 static void factor(Procedure *p, NodeList *nodes) {
-	int i, refSyntax = 0;
+	int i, refSyntax = 0, numNodes = nodes->numNodes;
 
 	i = lex();
 	if (i == '@') {
@@ -1140,6 +1129,9 @@ static void factor(Procedure *p, NodeList *nodes) {
 		break;
 	default:
 		parseLibExpression(p, nodes, i);
+		if (nodes->numNodes == numNodes) {
+			parseError("Expression expected.");
+		}
 		break;
 	}
 }
@@ -1602,66 +1594,37 @@ static void parseStatementInternal(Procedure *p, char requireSemicolon) {
 		emitOp(p, &p->nodes, T_END_STATEMENT);
 }
 
+static void parseStatementOrLocalVariables(Procedure *p, char requireSemicolon) {
+	if (variable(&p->variables, &p->namelist, V_LOCAL, 1, 1))
+		parseStatementInternal(p, requireSemicolon);
+}
+
 void parseStatement(Procedure *p) {
-	parseStatementInternal(p, 1);
+	parseStatementOrLocalVariables(p, 1);
 }
 
 // sfall addition
 void parseStatementNoSemicolon(Procedure *p) {
-	parseStatementInternal(p, 0);
+	parseStatementOrLocalVariables(p, 0);
 }
 
 static void parseBlock(Procedure *p) {
 	int i;
-	ArrayVarList arrays;
-	LexData tlex;
-	arrays.vars = 0;
-	arrays.size = 0;
-	arrays.count = 0;
 
 	if (expectToken(T_BEGIN) == -1)
 		parseError("expected 'begin'.");
 
 	emitNode(p, &p->nodes, &lexData);  // emit the begin
 
-	variable(&p->variables, &p->namelist, V_LOCAL, &arrays, 1);
-
-	for(i = 0; i < arrays.count; i++) {
-		emitOp(p, &p->nodes, T_START_STATEMENT);
-		tlex.token = T_SYMBOL;
-		tlex.stringData = arrays.vars[i].name;
-		emitNode(p, &p->nodes, &tlex);
-		emitOp(p, &p->nodes, T_ASSIGN);
-		emitOp(p, &p->nodes, T_START_EXPRESSION);
-		emitOp(p, &p->nodes, T_TS_TEMP_ARRAY);
-		emitOp(p, &p->nodes, T_START_EXPRESSION);
-		emitInt(p, &p->nodes, arrays.vars[i].len);
-		emitOp(p, &p->nodes, T_END_EXPRESSION);
-		emitOp(p, &p->nodes, T_START_EXPRESSION);
-		emitInt(p, &p->nodes, arrays.vars[i].datasize);
-		emitOp(p, &p->nodes, T_END_EXPRESSION);
-		emitOp(p, &p->nodes, T_END_EXPRESSION);
-		emitOp(p, &p->nodes, T_END_STATEMENT);
-	}
-
 	while ((i = lex()) != T_END) {
-		if (i == T_EOF)
+		if (i == T_EOF) {
 			parseError("Premature EOF encountered.");
-		else if (i == T_VARIABLE) { // sfall addition (Fakels)
-			VariableParse(&p->variables, &p->namelist, V_LOCAL, &arrays);
 		} else {
 			ungetToken();
 			parseStatement(p);
 		}
 	}
 	emitNode(p, &p->nodes, &lexData);  // emit the end
-
-	if (arrays.vars) {
-		for(i = 0; i < arrays.count; i++) {
-			free(arrays.vars[i].name);
-		}
-		free(arrays.vars);
-	}
 }
 
 static void parseIf(Procedure *p, NodeList *n) {
