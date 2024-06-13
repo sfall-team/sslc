@@ -590,7 +590,7 @@ static int defineVariable(VariableList *v, char **namelist, int type, char allow
 		} else if (expectToken(T_ASSIGN) != -1) {
 			char buf[1024];
 			int allowExpr = (allowMulti && type == V_LOCAL);
-			
+
 			strcpy(buf, symbol.stringData);
 			symbol.stringData = buf;
 
