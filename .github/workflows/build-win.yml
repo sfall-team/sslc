@@ -20,7 +20,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Update toolset
-        run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v143</PlatformToolset>|g' sslc.vcxproj
+        run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
 
       - name: Build Debug
         run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
