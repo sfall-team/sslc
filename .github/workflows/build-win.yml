@@ -20,7 +20,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Build Debug
-        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Debug" /p:Platform="Win32" /m
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
 
       - name: Upload Debug
         uses: actions/upload-artifact@v4
@@ -30,7 +30,7 @@ jobs:
             **/Debug/**
 
       - name: Build Release
-        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Release" /p:Platform="Win32" /m
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
 
       - name: Upload Release
         uses: actions/upload-artifact@v4
@@ -40,7 +40,7 @@ jobs:
             **/Release/**
 
       - name: Build Debug for Fallout1
-        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
 
       - name: Upload Debug for Fallout1
         uses: actions/upload-artifact@v4
@@ -50,7 +50,7 @@ jobs:
             **/Debug*/**
 
       - name: Build Release for Fallout1
-        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
 
       - name: Upload Release for Fallout1
         uses: actions/upload-artifact@v4
@@ -60,7 +60,7 @@ jobs:
             **/Release*/**
 
       - name: Build Release dll
-        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Release (dll)" /p:Platform="Win32" /m
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
 
       - name: Upload Release dll
         uses: actions/upload-artifact@v4
@@ -70,7 +70,7 @@ jobs:
             **/Release*/**
 
       - name: Build Win2K
-        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Win2K" /p:Platform="Win32" /m
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Win2K" /p:Platform="Win32" /m
 
       - name: Upload Win2K
         uses: actions/upload-artifact@v4
