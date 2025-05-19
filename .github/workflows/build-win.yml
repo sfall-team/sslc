@@ -38,10 +38,10 @@ jobs:
 
       
       - name: Name workaround
-        run: set -i 's|Debug (for Fallout1)|debug_fallout_1|g' sslc.vcxproj
-        
+        run: sed -i 's|Debug (for Fallout1)|debug_fallout_1|g' sslc.vcxproj
+
       - name: Build Debug for Fallout1
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="debug_fallout_1" /p:Platform="Win32" /m
+        run: msbuild sslc.vcxproj "/t:Clean;Build" /p:Configuration="debug_fallout_1" /p:Platform="Win32" /m
 
       - name: Upload Debug for Fallout1
         uses: actions/upload-artifact@v4
