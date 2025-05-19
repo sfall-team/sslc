@@ -1,5 +1,7 @@
 #include "compat.h"
 
+#ifndef _WIN32
+
 int strcpy_s(char* dest, size_t destsz, const char* src) {
     if (!dest || !src || destsz == 0) return EINVAL;
     size_t len = strlen(src);
@@ -136,3 +138,4 @@ int _findclose(intptr_t h) {
     return -1;
 }
 
+#endif
