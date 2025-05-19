@@ -26,20 +26,21 @@ jobs:
       - name: Download wasi-sdk
         run: |
           curl -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{env.WASI_VERSION}}/wasi-sdk-${{env.WASI_VERSION_FULL}}-x86_64-linux.tar.gz | tar xz
-          mv wasi-sdk-${{env.WASI_VERSION}} wasi-sdk
+          mv wasi-sdk-${{env.WASI_VERSION_FULL}} wasi-sdk
 
       - name: Configure project
         run: |
           mkdir build
           cd build
           cmake .. \
-            -DCMAKE_TOOLCHAIN_FILE=${WASI_SDK_DIR}/share/cmake/wasi-sdk.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=${{env.WASI_SDK_DIR}}/share/cmake/wasi-sdk.cmake \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build project
         run: |
           cd build
           cmake --build .
+          find .
 
       - name: Upload WebAssembly artifact
         uses: actions/upload-artifact@v4
