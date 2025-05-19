@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
-      WASI_VERSION: 25
-      WASI_VERSION_FULL: 25.0
+      WASI_VERSION: "25"
+      WASI_VERSION_FULL: "25.0"
       WASI_SDK_DIR: ${{ github.workspace }}/wasi-sdk
     steps:
       - name: Checkout repository
