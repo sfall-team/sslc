@@ -20,11 +20,11 @@ jobs:
       - name: Clone
         uses: actions/checkout@v4
 
-#      - name: Dependencies (x86)
-#        run: |
-#          sudo dpkg --add-architecture i386
-#          sudo apt update
-#          sudo apt install -y build-essential
+      - name: Dependencies (x86)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y build-essential
 
       - name: Configure & build
         run: |
