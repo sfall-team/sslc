@@ -14,6 +14,10 @@
 
 #include "gencode.h"
 
+#ifndef _WIN32
+#include "compat.h"
+#endif
+
 extern int shortCircuit;
 
 static Program *currentProgram;

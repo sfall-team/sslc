@@ -16,6 +16,10 @@
 #include "lex.h"
 #include "parseext.h"
 
+#ifndef _WIN32
+#include "compat.h"
+#endif
+
 int compilerErrorTotal;
 char compilerSyntaxError;
 
