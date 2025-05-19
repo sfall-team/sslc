@@ -25,7 +25,7 @@
 #define _A_NORMAL 0x00
 #define _A_SUBDIR 0x10
 
-#define _MSC_VER;
+#define _MSC_VER 
 
 
 int sprintf_s(char *buffer, size_t sizeOfBuffer, const char *format, ...);
