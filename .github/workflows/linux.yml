@@ -17,15 +17,15 @@ jobs:
 
     env:
       WASI_VERSION: 25
+      WASI_VERSION_FULL: 25.0
       WASI_SDK_DIR: ${{ github.workspace }}/wasi-sdk
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Download wasi-sdk
         run: |
-          curl -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{env.WASI_VERSION}}/wasi-sdk-${{env.WASI_VERSION}}-linux.tar.gz | tar xz
+          curl -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{env.WASI_VERSION}}/wasi-sdk-${{env.WASI_VERSION_FULL}}-x86_64-linux.tar.gz | tar xz
           mv wasi-sdk-${{env.WASI_VERSION}} wasi-sdk
 
       - name: Configure project
