@@ -52,8 +52,13 @@
 #define S_ISREG( mode)  (mode & S_IFREG)
 #define S_ISDIR( mode)  (mode & S_IFDIR)
 #endif
+#if ! defined (S_IFREG)
 #define S_IFREG     _S_IFREG
+#endif
+#if ! defined (S_IFDIR)
 #define S_IFDIR     _S_IFDIR
+#endif
+
 #define stat( path, stbuf)  _stat( path, stbuf)
 
 /* Function to compare path-list    */
