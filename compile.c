@@ -1,11 +1,16 @@
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_RAND_S
-#include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "lex.h"
 #include "parse.h"
+
+#ifdef _WIN32
+#include <Windows.h>
 #include <io.h>
+#else
+#include "compat.h"
+#endif
 
 #include "resource.h"
 

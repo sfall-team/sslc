@@ -37,8 +37,8 @@
 #if PREPROCESSED
 #include    "mcpp.H"
 #else
-#include    "system.H"
-#include    "internal.H"
+#include    "system.h"
+#include    "internal.h"
 #endif
 
 #define ARG_ERROR   (-255)
