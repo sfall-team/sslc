@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  linux-build:
+    name: Linux build
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Dependencies (x86)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
+
+      - name: Configure & build
+        run: |
+          mkdir out
+          cd out
+          cmake ..
+          make
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path:  out/bin/*
+          retention-days: 7
