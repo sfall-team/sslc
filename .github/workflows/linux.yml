@@ -14,7 +14,7 @@ jobs:
   build-wasm:
     name: WebAssembly (WASI) Build
     runs-on: ubuntu-22.04
-
+    if: false # Disable this job because WASI do not support setjmp/longjmp
     env:
       WASI_VERSION: "25"
       WASI_VERSION_FULL: "25.0"
