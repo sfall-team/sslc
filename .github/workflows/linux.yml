@@ -50,6 +50,29 @@ jobs:
           path: |
             build/**/*.wasm
 
+
+  build_webassembly_version:
+    name: Build webassembly version (Emscripten)
+    runs-on: ubuntu-latest
+    container:
+        image: emscripten/emsdk:4.0.4
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Build wasm module
+        run: |
+          mkdir -p build
+          cd build
+          emcmake cmake ..
+          emmake make
+
+      - name: Upload .wasm artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-artifacts
+          path: build/bin/**
+
   linux-build:
     name: Linux build
 
