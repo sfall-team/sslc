@@ -55,7 +55,7 @@ jobs:
     name: Build webassembly version (Emscripten)
     runs-on: ubuntu-latest
     container:
-        image: emscripten/emsdk:4.0.4
+        image: emscripten/emsdk:4.0.8
     steps:
       - name: Clone
         uses: actions/checkout@v4
