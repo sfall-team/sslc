@@ -26,7 +26,8 @@ jobs:
       - name: Download wasi-sdk
         run: |
           curl -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{env.WASI_VERSION}}/wasi-sdk-${{env.WASI_VERSION_FULL}}-x86_64-linux.tar.gz | tar xz
-          mv wasi-sdk-${{env.WASI_VERSION_FULL}} wasi-sdk
+          ls -lah
+          mv wasi-sdk-${{env.WASI_VERSION_FULL}}-x86_64-linux wasi-sdk
 
       - name: Configure project
         run: |
