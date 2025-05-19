@@ -1,0 +1,80 @@
+name: Build SSLC Project
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Debug
+        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Debug" /p:Platform="Win32" /m
+
+      - name: Upload Debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Debug
+          path: |
+            **/Debug/**
+
+      - name: Build Release
+        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Release" /p:Platform="Win32" /m
+
+      - name: Upload Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Release
+          path: |
+            **/Release/**
+
+      - name: Build Debug for Fallout1
+        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
+
+      - name: Upload Debug for Fallout1
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Debug-for-Fallout1
+          path: |
+            **/Debug*/**
+
+      - name: Build Release for Fallout1
+        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
+
+      - name: Upload Release for Fallout1
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Release-for-Fallout1
+          path: |
+            **/Release*/**
+
+      - name: Build Release dll
+        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Release (dll)" /p:Platform="Win32" /m
+
+      - name: Upload Release dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Release-dll
+          path: |
+            **/Release*/**
+
+      - name: Build Win2K
+        run: msbuild sslc.sln /t:Clean;Build /p:Configuration="Win2K" /p:Platform="Win32" /m
+
+      - name: Upload Win2K
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Win2K
+          path: |
+            **/Win2K*/**
