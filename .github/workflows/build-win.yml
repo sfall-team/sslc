@@ -85,12 +85,12 @@ jobs:
             **/Build/*.dll
 
 
-      - name: Build Win2K
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Win2K" /p:Platform="Win32" /m
+      # - name: Build Win2K
+      #   run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Win2K" /p:Platform="Win32" /m
 
-      - name: Upload Win2K
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-Win2K
-          path: |
-            **/Win2K*/*.exe
+      # - name: Upload Win2K
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-Win2K
+      #     path: |
+      #       **/Win2K*/*.exe
