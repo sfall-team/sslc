@@ -38,7 +38,7 @@ jobs:
 
       
       - name: Build Debug for Fallout1
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
+        run: msbuild sslc.vcxproj "/t:Clean;Build" /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
 
       - name: Upload Debug for Fallout1
         uses: actions/upload-artifact@v4
@@ -64,7 +64,7 @@ jobs:
 
 
       - name: Build Release for Fallout1
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
+        run: msbuild sslc.vcxproj "/t:Clean;Build" /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
 
       - name: Upload Release for Fallout1
         uses: actions/upload-artifact@v4
@@ -75,7 +75,7 @@ jobs:
 
 
       - name: Build Release dll
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
+        run: msbuild sslc.vcxproj "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
 
       - name: Upload Release dll
         uses: actions/upload-artifact@v4
