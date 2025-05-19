@@ -1,6 +1,7 @@
 *.vcxproj.user
 .vs/
 Build/
+build/
 Debug/
 Release/
 ReleaseDLL/

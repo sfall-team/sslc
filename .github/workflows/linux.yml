@@ -11,6 +11,43 @@ defaults:
     shell: bash
 
 jobs:
+  build-wasm:
+    name: WebAssembly (WASI) Build
+    runs-on: ubuntu-22.04
+
+    env:
+      WASI_VERSION: 25
+      WASI_SDK_DIR: ${{ github.workspace }}/wasi-sdk
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download wasi-sdk
+        run: |
+          curl -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_VERSION}/wasi-sdk-${WASI_VERSION}-linux.tar.gz | tar xz
+          mv wasi-sdk-${WASI_VERSION} wasi-sdk
+
+      - name: Configure project
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=${WASI_SDK_DIR}/share/cmake/wasi-sdk.cmake \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build project
+        run: |
+          cd build
+          cmake --build .
+
+      - name: Upload WebAssembly artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-artifacts
+          path: |
+            build/**/*.wasm
+
   linux-build:
     name: Linux build
 
