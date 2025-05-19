@@ -22,6 +22,9 @@ jobs:
       - name: Update toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
 
+      - name: Link statically
+        run: sed -i 's|MultiThreadedDebugDLL|MultiThreadedDebug|g' sslc.vcxproj
+
 
       - name: Build Debug
         run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
@@ -81,7 +84,7 @@ jobs:
           path: |
             **/Build/*.dll
 
-            
+
       - name: Build Win2K
         run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Win2K" /p:Platform="Win32" /m
 
