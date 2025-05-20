@@ -6,9 +6,7 @@ on:
     pull_request:
       types: [opened, synchronize]
 
-defaults:
-  run:
-    shell: bash
+
 
 jobs:
   build_windows:
@@ -101,6 +99,9 @@ jobs:
   build-wasm:
     name: WebAssembly (WASI) Build
     runs-on: ubuntu-22.04
+    defaults:
+        run:
+          shell: bash    
     if: false # Disable this job because WASI do not support setjmp/longjmp
     env:
       WASI_VERSION: "25"
@@ -141,6 +142,9 @@ jobs:
   build_emscripten:
     name: Build webassembly version (Emscripten)
     runs-on: ubuntu-latest
+    defaults:
+        run:
+          shell: bash    
     container:
         image: emscripten/emsdk:4.0.8
     steps:
@@ -162,9 +166,10 @@ jobs:
 
   build_linux:
     name: Linux build
-
     runs-on: ubuntu-22.04
-
+    defaults:
+        run:
+          shell: bash
     steps:
       - name: Clone
         uses: actions/checkout@v4
