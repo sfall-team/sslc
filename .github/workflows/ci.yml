@@ -195,6 +195,7 @@ jobs:
 
       - name: Pack wasm artifact into tar.gz
         run: |
+          ls -laR
           cd artifacts
           tar -czf emscripten.tar.gz wasm-emscripten/*
           rm -rf wasm-emscripten
