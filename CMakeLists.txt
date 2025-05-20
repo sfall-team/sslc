@@ -42,8 +42,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 
   target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY" )
   target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY_STACK_SIZE=20480" )
-
-  target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sENVIRONMENT=web" )
+  
   target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sALLOW_MEMORY_GROWTH" )
   target_link_options( ${EXECUTABLE_NAME} PRIVATE "-MEMORY_GROWTH_LINEAR_STEP=32mb" )
   target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sNO_DISABLE_EXCEPTION_CATCHING" )
