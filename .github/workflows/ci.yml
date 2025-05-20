@@ -30,7 +30,7 @@ jobs:
       - name: Upload Debug
         uses: actions/upload-artifact@v4
         with:
-          name: build-Debug
+          name: windows-debug
           path: |
             **/Debug/*.exe
 
@@ -56,7 +56,7 @@ jobs:
       - name: Upload Release
         uses: actions/upload-artifact@v4
         with:
-          name: build-Release
+          name: windows-release
           path: |
             **/Build/*.exe
 
@@ -78,7 +78,7 @@ jobs:
       - name: Upload Release dll
         uses: actions/upload-artifact@v4
         with:
-          name: build-Release-dll
+          name: windows-release-dll
           path: |
             **/Build/*.dll
 
@@ -134,7 +134,7 @@ jobs:
       - name: Upload WebAssembly artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wasm-artifacts
+          name: wasm-emscripten
           path: |
             build/**/*.wasm
 
