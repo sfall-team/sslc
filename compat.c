@@ -2,6 +2,10 @@
 
 #ifndef _WIN32
 
+
+// Functions in this file are written by ChatGPT
+// Need carefull review
+
 int strcpy_s(char* dest, size_t destsz, const char* src) {
     if (!dest || !src || destsz == 0) return EINVAL;
     size_t len = strlen(src);
