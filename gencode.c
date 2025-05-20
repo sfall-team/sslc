@@ -14,6 +14,10 @@
 
 #include "gencode.h"
 
+#ifndef _WIN32
+#include "compat.h"
+#endif
+
 extern int shortCircuit;
 
 static Program *currentProgram;
@@ -867,7 +871,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 	return i+1;
 }
 
-static int writeBlock(NodeList *n, int i, FILE *f) {
+extern int writeBlock(NodeList *n, int i, FILE *f) {
 	if (n->nodes[i].token != T_BEGIN)
 		parseError("begin expected");
 

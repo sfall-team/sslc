@@ -35,8 +35,8 @@
  * Some routines are used also to evaluate the value of numerical tokens.
  */
 
-#include    "system.H"
-#include    "internal.H"
+#include    "system.h"
+#include    "internal.h"
 
 typedef struct optab {
     char    op;                     /* Operator                     */

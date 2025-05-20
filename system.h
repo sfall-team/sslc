@@ -41,7 +41,7 @@
 
 #define SYSTEM_H
 
-#include    "noconfig.H"
+#include    "noconfig.h"
 
 /*
  *      PART 1 and PART 2 are defined in the above header files.

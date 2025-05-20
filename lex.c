@@ -7,6 +7,10 @@
 #include "parselib.h"
 #include "extra.h"
 
+#ifndef _WIN32
+#include "compat.h"
+#endif
+
 LexData lexData;
 static char *tokens[256+T_END_TOKEN];
 static struct {

@@ -36,10 +36,15 @@
  *      1. specify the constants in "configed.H" or "noconfig.H",
  *      2. append the system-dependent routines in this file.
  */
-#include    "system.H"
-#include    "internal.H"
+#include    "system.h"
+#include    "internal.h"
 
-#include    "direct.h"
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include "compat.h"
+#endif
+
 #define getcwd( buf, size)  _getcwd( buf, size)
 #include    "sys/types.h"
 #include    "sys/stat.h"                        /* For stat()       */
@@ -47,8 +52,13 @@
 #define S_ISREG( mode)  (mode & S_IFREG)
 #define S_ISDIR( mode)  (mode & S_IFDIR)
 #endif
+#if ! defined (S_IFREG)
 #define S_IFREG     _S_IFREG
+#endif
+#if ! defined (S_IFDIR)
 #define S_IFDIR     _S_IFDIR
+#endif
+
 #define stat( path, stbuf)  _stat( path, stbuf)
 
 /* Function to compare path-list    */

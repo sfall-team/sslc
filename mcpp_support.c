@@ -70,8 +70,8 @@
  *              buffer.
  */
 
-#include    "system.H"
-#include    "internal.H"
+#include    "system.h"
+#include    "internal.h"
 
 static void     scan_id( int c);
                 /* Scan an identifier           */
