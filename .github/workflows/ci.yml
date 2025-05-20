@@ -207,7 +207,7 @@ jobs:
           mv windows-debug/Debug/sslc.exe sslc-debug.exe
           rm -rf windows-debug
 
-          mv windows-release/Build/sslc.exe sslc.exe
+          mv windows-release/Build/compile.exe compile.exe
           rm -rf windows-release
 
           mv windows-release-dll/Build/parser.dll parser.dll
