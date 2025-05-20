@@ -11,6 +11,93 @@ defaults:
     shell: bash
 
 jobs:
+  build_windows:
+    runs-on: windows-2019
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Update toolset
+        run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
+
+      - name: Link statically
+        run: sed -i 's|MultiThreadedDebugDLL|MultiThreadedDebug|g' sslc.vcxproj
+
+      - name: Build Debug
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
+
+      - name: Upload Debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Debug
+          path: |
+            **/Debug/*.exe
+
+
+      
+      # - name: Build Debug for Fallout1
+      #   run: msbuild sslc.vcxproj "/t:Clean;Build" /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
+
+      # - name: Upload Debug for Fallout1
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-Debug-for-Fallout1
+      #     path: |
+      #       **/Debug*/*.exe
+
+
+      - name: Mkdir
+        run: mkdir -p Build
+
+      - name: Build Release
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
+
+      - name: Upload Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Release
+          path: |
+            **/Build/*.exe
+
+
+      # - name: Build Release for Fallout1
+      #   run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
+
+      # - name: Upload Release for Fallout1
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-Release-for-Fallout1
+      #     path: |
+      #       **/Build/*.exe
+
+
+      - name: Build Release dll
+        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
+
+      - name: Upload Release dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Release-dll
+          path: |
+            **/Build/*.dll
+
+
+      # - name: Build Win2K
+      #   run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Win2K" /p:Platform="Win32" /m
+
+      # - name: Upload Win2K
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-Win2K
+      #     path: |
+      #       **/Win2K*/*.exe
+
+
+
+
   build-wasm:
     name: WebAssembly (WASI) Build
     runs-on: ubuntu-22.04
@@ -51,7 +138,7 @@ jobs:
             build/**/*.wasm
 
 
-  build_webassembly_version:
+  build_emscripten:
     name: Build webassembly version (Emscripten)
     runs-on: ubuntu-latest
     container:
@@ -73,7 +160,7 @@ jobs:
           name: wasm-artifacts
           path: build/bin/**
 
-  linux-build:
+  build_linux:
     name: Linux build
 
     runs-on: ubuntu-22.04
