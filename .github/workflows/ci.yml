@@ -1,12 +1,10 @@
 name: Build
 
 on:
-    push:
-      branches: [main, master]
-    pull_request:
-      types: [opened, synchronize]
-
-
+  push:
+    branches: [main, master]
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   build_windows:
@@ -34,8 +32,6 @@ jobs:
           path: |
             **/Debug/*.exe
 
-
-      
       # - name: Build Debug for Fallout1
       #   run: msbuild sslc.vcxproj "/t:Clean;Build" /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
 
@@ -45,7 +41,6 @@ jobs:
       #     name: build-Debug-for-Fallout1
       #     path: |
       #       **/Debug*/*.exe
-
 
       - name: Mkdir
         run: mkdir -p Build
@@ -60,7 +55,6 @@ jobs:
           path: |
             **/Build/*.exe
 
-
       # - name: Build Release for Fallout1
       #   run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
 
@@ -70,7 +64,6 @@ jobs:
       #     name: build-Release-for-Fallout1
       #     path: |
       #       **/Build/*.exe
-
 
       - name: Build Release dll
         run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
@@ -82,7 +75,6 @@ jobs:
           path: |
             **/Build/*.dll
 
-
       # - name: Build Win2K
       #   run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Win2K" /p:Platform="Win32" /m
 
@@ -93,15 +85,12 @@ jobs:
       #     path: |
       #       **/Win2K*/*.exe
 
-
-
-
   build-wasm:
     name: WebAssembly (WASI) Build
     runs-on: ubuntu-22.04
     defaults:
-        run:
-          shell: bash    
+      run:
+        shell: bash
     if: false # Disable this job because WASI do not support setjmp/longjmp
     env:
       WASI_VERSION: "25"
@@ -138,15 +127,14 @@ jobs:
           path: |
             build/**/*.wasm
 
-
   build_emscripten:
     name: Build webassembly version (Emscripten)
     runs-on: ubuntu-latest
     defaults:
-        run:
-          shell: bash    
+      run:
+        shell: bash
     container:
-        image: emscripten/emsdk:4.0.8
+      image: emscripten/emsdk:4.0.8
     steps:
       - name: Clone
         uses: actions/checkout@v4
@@ -168,8 +156,8 @@ jobs:
     name: Linux build
     runs-on: ubuntu-22.04
     defaults:
-        run:
-          shell: bash
+      run:
+        shell: bash
     steps:
       - name: Clone
         uses: actions/checkout@v4
@@ -191,5 +179,36 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux
-          path:  out/bin/**
+          path: out/bin/**
           retention-days: 7
+
+  release:
+    # if: github.event_name == 'push'
+    runs-on: ubuntu-22.04
+    needs: [build_windows, build_linux, build_emscripten]
+    permissions: write-all
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Pack wasm artifact into tar.gz
+        run: |
+          cd artifacts
+          tar -czf emscripten.tar.gz wasm-emscripten/*
+          rm -rf wasm-emscripten
+
+      - name: Generate timestamp tag
+        id: tag
+        run: echo "TAG_NAME=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
+          name: Build from ${{ steps.tag.outputs.TAG_NAME }}
+          files: artifacts/*
+          draft: false
+          prerelease: true
+          
