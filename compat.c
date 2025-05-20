@@ -82,11 +82,11 @@ intptr_t _findfirst(const char *pattern, struct _finddata_t *data) {
     while ((entry = readdir(handle->dir)) != NULL) {
         if (fnmatch(handle->pattern, entry->d_name, 0) == 0) {
             struct stat st;
-            char fullpath[512];
+            char fullpath[PATH_MAX];
             snprintf(fullpath, sizeof(fullpath), "%s%s", handle->path, entry->d_name);
             if (stat(fullpath, &st) == 0) {
                 // Make the name absolute
-                char abspath[512];
+                char abspath[PATH_MAX];
                 if (realpath(fullpath, abspath)) {
                     strncpy(data->name, abspath, sizeof(data->name) - 1);
                     data->name[sizeof(data->name) - 1] = '\0';
@@ -117,7 +117,7 @@ int _findnext(intptr_t h, struct _finddata_t *data) {
     while ((entry = readdir(handle->dir)) != NULL) {
         if (fnmatch(handle->pattern, entry->d_name, 0) == 0) {
             struct stat st;
-            char fullpath[512];
+            char fullpath[PATH_MAX];
             snprintf(fullpath, sizeof(fullpath), "%s%s", handle->path, entry->d_name);
             if (stat(fullpath, &st) == 0) {
                 strncpy(data->name, entry->d_name, sizeof(data->name));

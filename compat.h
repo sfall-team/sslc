@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <limits.h>
 
 #define _A_NORMAL 0x00
 #define _A_SUBDIR 0x10
@@ -53,13 +54,13 @@ struct _finddata_t {
     unsigned attrib;
     time_t time_write;
     size_t size;
-    char name[260];  // or PATH_MAX
+    char name[PATH_MAX];
 };
 
 typedef struct {
     DIR *dir;
-    char pattern[260];
-    char path[260];
+    char pattern[PATH_MAX];
+    char path[PATH_MAX];
 } _find_handle_t;
 
 
