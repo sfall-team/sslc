@@ -183,7 +183,7 @@ jobs:
           retention-days: 7
 
   release:
-    if: github.event_name == 'push'
+    # if: github.event_name == 'push'
     runs-on: ubuntu-22.04
     needs: [build_windows, build_linux, build_emscripten]
     permissions: write-all
@@ -193,14 +193,38 @@ jobs:
         with:
           path: artifacts
 
-      - name: Pack wasm artifact into tar.gz
+      - name: Prepare artifacts
         run: |
           ls -laR          
+
           cd artifacts/wasm-emscripten
           tar -czf ../wasm-emscripten.tar.gz *
           cd ..
           rm -rf wasm-emscripten
+
           ls -laR
+
+          mv windows-debug/Debug/ssls.exe ssls-debug.exe
+          rm -rf windows-debug
+
+          mv windows-release/Build/ssls.exe ssls.exe
+          rm -rf windows-release
+
+          mv windows-release-dll/Build/parser.dll parser.dll
+          rm -rf windows-release-dll
+
+          mv linux/sslc sslc-linux
+          rm -rf linux
+
+          ls -laR
+
+          if find . -mindepth 1 -maxdepth 1 -type d | grep -q .; then
+            echo "Directory contains subfolders."
+            exit 1
+          else
+            echo "No subfolders found."
+            exit 0
+          fi
 
       - name: Generate timestamp tag
         id: tag
@@ -214,4 +238,3 @@ jobs:
           files: artifacts/*
           draft: false
           prerelease: true
-          
