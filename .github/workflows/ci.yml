@@ -149,7 +149,7 @@ jobs:
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: wasm-emscipten
+          name: wasm-emscripten
           path: build/bin/**
 
   build_linux:
