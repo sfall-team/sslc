@@ -149,7 +149,7 @@ jobs:
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: wasm-emscripten
+          name: wasm-emscripten-node-rawfs
           path: build/bin/**
 
   build_linux:
@@ -197,10 +197,10 @@ jobs:
         run: |
           ls -laR          
 
-          cd artifacts/wasm-emscripten
-          tar -czf ../wasm-emscripten.tar.gz *
+          cd artifacts/wasm-emscripten-node-rawfs
+          tar -czf ../wasm-emscripten-node-rawfs.tar.gz *
           cd ..
-          rm -rf wasm-emscripten
+          rm -rf wasm-emscripten-node-rawfs
 
           ls -laR
 
