@@ -219,20 +219,25 @@ int main(int argc, char **argv)
 					}
 				}
 #ifndef WIN2K
+				char tmp_file_name[260] = {0};
 				if(preprocess) {
 					FILE *newfile;
 					unsigned int letters;
-					char tmpbuf[260];
+
 					rand_s(&letters);
 					if(onlypreprocess) {
-						strcpy_s(tmpbuf, 260, name);
-						newfile=fopen(tmpbuf, "w+");
+						strcpy_s(tmp_file_name, 260, name);
+						newfile=fopen(tmp_file_name, "w+");
 					} else {
-						sprintf(tmpbuf, "%d_%8x.tmp", GetCurrentProcessId(), letters);
+						sprintf(tmp_file_name, "%d_%8x.tmp", GetCurrentProcessId(), letters);
 //#if _DEBUG
-//						newfile=fopen(tmpbuf, "w+");
+//						newfile=fopen(tmp_file_name, "w+");
 //#else
-						newfile=fopen(tmpbuf, "w+DT");
+#ifdef WIN32
+						newfile=fopen(tmp_file_name, "w+DT");
+#else
+						newfile=fopen(tmp_file_name, "w+");
+#endif
 //#endif
 					}
 					if(mcpp_lib_main(foo.file, newfile, buf.name, buf.name, defMacro, includeDir)) {
@@ -249,6 +254,11 @@ int main(int argc, char **argv)
 					freeCurrentProgram();
 				}
 				fclose(foo.file);
+#ifndef WIN32
+				if (strlen(tmp_file_name) > 0) {
+					remove(tmp_file_name);
+				}
+#endif
 				FreeFileNames();
 			} while (!FINDNEXT(handle, &buf));
 
