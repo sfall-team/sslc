@@ -232,12 +232,7 @@ int main(int argc, char **argv)
 //#if _DEBUG
 //						newfile=fopen(tmpbuf, "w+");
 //#else
-#ifdef WIN32
 						newfile=fopen(tmpbuf, "w+DT");
-#else
-						newfile=fopen(tmpbuf, "w+");
-						unlink(tmpbuf);
-#endif
 //#endif
 					}
 					if(mcpp_lib_main(foo.file, newfile, buf.name, buf.name, defMacro, includeDir)) {
