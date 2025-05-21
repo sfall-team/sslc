@@ -219,24 +219,24 @@ int main(int argc, char **argv)
 					}
 				}
 #ifndef WIN2K
-				char tmpbuf[260] = {0};
+				char tmp_file_name[260] = {0};
 				if(preprocess) {
 					FILE *newfile;
 					unsigned int letters;
 
 					rand_s(&letters);
 					if(onlypreprocess) {
-						strcpy_s(tmpbuf, 260, name);
-						newfile=fopen(tmpbuf, "w+");
+						strcpy_s(tmp_file_name, 260, name);
+						newfile=fopen(tmp_file_name, "w+");
 					} else {
-						sprintf(tmpbuf, "%d_%8x.tmp", GetCurrentProcessId(), letters);
+						sprintf(tmp_file_name, "%d_%8x.tmp", GetCurrentProcessId(), letters);
 //#if _DEBUG
-//						newfile=fopen(tmpbuf, "w+");
+//						newfile=fopen(tmp_file_name, "w+");
 //#else
 #ifdef WIN32
-						newfile=fopen(tmpbuf, "w+DT");
+						newfile=fopen(tmp_file_name, "w+DT");
 #else
-						newfile=fopen(tmpbuf, "w+");
+						newfile=fopen(tmp_file_name, "w+");
 #endif
 //#endif
 					}
@@ -255,8 +255,8 @@ int main(int argc, char **argv)
 				}
 				fclose(foo.file);
 #ifndef WIN32
-				if (strlen(tmpbuf) > 0) {
-					remove(tmpbuf);
+				if (strlen(tmp_file_name) > 0) {
+					remove(tmp_file_name);
 				}
 #endif
 				FreeFileNames();
