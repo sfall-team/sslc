@@ -85,16 +85,8 @@ intptr_t _findfirst(const char *pattern, struct _finddata_t *data) {
             char fullpath[PATH_MAX];
             snprintf(fullpath, sizeof(fullpath), "%s%s", handle->path, entry->d_name);
             if (stat(fullpath, &st) == 0) {
-                // Make the name absolute
-                char abspath[PATH_MAX];
-                if (realpath(fullpath, abspath)) {
-                    strncpy(data->name, abspath, sizeof(data->name) - 1);
-                    data->name[sizeof(data->name) - 1] = '\0';
-                } else {
-                    // Fallback to relative path
-                    strncpy(data->name, fullpath, sizeof(data->name) - 1);
-                    data->name[sizeof(data->name) - 1] = '\0';
-                }
+                strncpy(data->name, entry->d_name, sizeof(data->name) - 1);
+                data->name[sizeof(data->name) - 1] = '\0';
 
                 data->time_write = st.st_mtime;
                 data->size = st.st_size;
@@ -120,7 +112,9 @@ int _findnext(intptr_t h, struct _finddata_t *data) {
             char fullpath[PATH_MAX];
             snprintf(fullpath, sizeof(fullpath), "%s%s", handle->path, entry->d_name);
             if (stat(fullpath, &st) == 0) {
-                strncpy(data->name, entry->d_name, sizeof(data->name));
+                strncpy(data->name, entry->d_name, sizeof(data->name) - 1);
+                data->name[sizeof(data->name) - 1] = '\0';
+
                 data->time_write = st.st_mtime;
                 data->size = st.st_size;
                 data->attrib = S_ISDIR(st.st_mode) ? _A_SUBDIR : _A_NORMAL;
