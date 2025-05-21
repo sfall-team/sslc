@@ -47,8 +47,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-MEMORY_GROWTH_LINEAR_STEP=32mb")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sNO_DISABLE_EXCEPTION_CATCHING")
 
-  # target_link_options( ${EXECUTABLE_NAME} PRIVATE "-lnodefs.js" )
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sNODERAWFS")
+  target_link_options( ${EXECUTABLE_NAME} PRIVATE "-lnodefs.js" )
+  # target_link_options(${EXECUTABLE_NAME} PRIVATE "-sNODERAWFS")
 
   # Disabled because of emscipten bug
   # target_link_options( ${EXECUTABLE_NAME} PRIVATE "-sCASE_INSENSITIVE_FS" )
