@@ -41,3 +41,6 @@ procedure map_enter_p_proc begin
     display_msg("Starting tests");
     call some_tests();
  end
+
+
+ 

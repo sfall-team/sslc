@@ -1,18 +1,7 @@
 Set include directory: ../include
 Compiling source_with_include.ssl
-[Warning] </home/vasilii/sslc/test/include/hello_world_text.h>:6: End of file with no newline, supplemented newline
-    #endif
-    from /home/vasilii/sslc/test/include/say_hello.h: 4:    #include "./hello_world_text.h"
-    from source_with_include.ssl: 1:    #include <say_hello.h>
-[Warning] </home/vasilii/sslc/test/include/hello_world_text.h>:6: End of file with no newline, supplemented newline
-    #endif
-    from /home/vasilii/sslc/test/include/say_hello.h: 5:    #include <./hello_world_text.h>
-    from source_with_include.ssl: 1:    #include <say_hello.h>
-[Warning] </home/vasilii/sslc/test/include/say_hello.h>:11: End of file with no newline, supplemented newline
-    #endif
-    from source_with_include.ssl: 1:    #include <say_hello.h>
-[Warning] <source_with_include.ssl>:43: End of input with no newline, supplemented newline
-     end
+[Warning] <source_with_include.ssl>:46: End of input with no newline, supplemented newline
+     
 [Message] <source_with_include.ssl>:17:75: Eliminating procedure assertNotEquals
 [Message] <source_with_include.ssl>:12:40: Constant propagating global variable test_suite_verbose
 [Message] <none>:-1: Eliminating unused global variable test_suite_verbose
