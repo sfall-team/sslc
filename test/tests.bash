@@ -4,7 +4,7 @@
 # This file runs sslc on test files in this folder
 # and returns error code if git detects some changes
 #
-#
+# To reset snapshots just remove all *.stdout and *.int files
 
 
 if [[ -z "${SSLC}" ]]; then
@@ -12,7 +12,7 @@ if [[ -z "${SSLC}" ]]; then
   exit 1
 fi
 
-sed -i 's/\r$//' "include/*.h" # To suppess sslc warnings
+sed -i 's/\r$//' include/*.h # To suppess sslc warnings
 
 ERRORS=""
 
@@ -33,6 +33,12 @@ function run_tests() {
 
     sed -i 's/\r$//' $BNAME.stdout
     sed -i 's/\r$//' $BNAME.stdout.testrun
+
+    if [ ! -e "$BNAME.stdout" ]; then
+      echo "== UPDATING STDOUT SNAPSHOT =="
+      cp $BNAME.stdout.testrun $BNAME.stdout
+    fi
+
     if diff $BNAME.stdout $BNAME.stdout.testrun ; then
       true; # Stdout is equal
     else
@@ -41,6 +47,11 @@ function run_tests() {
       echo "===received stdout==="
       cat $BNAME.stdout.testrun
       ERRORS="$ERRORS $DIR/$f=STDOUT"
+    fi
+
+    if [ ! -e "$BNAME.ssl" ]; then
+      echo "== UPDATING SSL SNAPSHOT =="
+      cp $BNAME.ssl.testrun $BNAME.ssl
     fi
 
     if diff $BNAME.int.testrun $BNAME.int ; then
