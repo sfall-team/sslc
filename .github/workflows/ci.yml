@@ -157,6 +157,7 @@ jobs:
           cd build
           emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
           emmake make
+          mv bin package
 
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
