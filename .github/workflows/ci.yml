@@ -157,13 +157,12 @@ jobs:
           cd build
           emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
           emmake make
-          mv bin package
 
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wasm-emscripten-node-nodefs
-          path: build/package
+          path: build/bin/**
 
   build_linux:
     name: Linux build
@@ -216,10 +215,11 @@ jobs:
         run: |
           ls -laR
 
-          cd artifacts/wasm-emscripten-node-nodefs
-          tar -czf ../wasm-emscripten-node-nodefs.tar.gz *
-          cd ..
-          rm -rf wasm-emscripten-node-nodefs
+          cd artifacts
+
+          mv wasm-emscripten-node-nodefs package
+          tar -czf wasm-emscripten-node-nodefs.tar.gz package
+          rm -rf package
 
           ls -laR
 
