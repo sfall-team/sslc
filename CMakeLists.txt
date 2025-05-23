@@ -72,7 +72,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     "name": "sslc-emscripten-nodefs",
     "version": "1.0.0",
     "description": "",
-    "main": "sslc.js",
+    "main": "sslc.mjs",
     "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1"
     },
