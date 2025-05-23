@@ -25,6 +25,12 @@ jobs:
       - name: Build Debug
         run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
 
+      - name: Test
+        shell: bash
+        run: |
+          export SSLC=../Debug/sslc.exe
+          (cd test && bash ./tests.bash)
+
       - name: Upload Debug
         uses: actions/upload-artifact@v4
         with:
@@ -47,6 +53,12 @@ jobs:
 
       - name: Build Release
         run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
+
+      - name: Test
+        shell: bash
+        run: |
+          export SSLC=../Build/compile.exe
+          (cd test && bash ./tests.bash)
 
       - name: Upload Release
         uses: actions/upload-artifact@v4
@@ -175,6 +187,12 @@ jobs:
           cmake ..
           make
 
+      - name: Test
+        shell: bash
+        run: |
+          export SSLC=../out/bin/sslc
+          (cd test && bash ./tests.bash)
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -195,7 +213,7 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          ls -laR          
+          ls -laR
 
           cd artifacts/wasm-emscripten-node-nodefs
           tar -czf ../wasm-emscripten-node-nodefs.tar.gz *
