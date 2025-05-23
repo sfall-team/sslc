@@ -39,9 +39,7 @@ function run_tests() {
       cp $BNAME.stdout.testrun $BNAME.stdout
     fi
 
-    if diff $BNAME.stdout $BNAME.stdout.testrun ; then
-      true; # Stdout is equal
-    else
+    if ! diff $BNAME.stdout $BNAME.stdout.testrun ; then
       echo "===expected stdout==="
       cat $BNAME.stdout
       echo "===received stdout==="
@@ -54,20 +52,12 @@ function run_tests() {
       cp $BNAME.int.testrun $BNAME.int
     fi
 
-    if diff $BNAME.int.testrun $BNAME.int ; then
-      true; # Binary files are equal
-    else
+    if ! diff $BNAME.int.testrun $BNAME.int ; then
       echo "===.INT FILES DIFFERENT==="
       ERRORS="$ERRORS $DIR/$f=INT"
     fi
 
-    if [ $RETURN_CODE -eq 0 ]; then
-      true # all ok
-      # Debugging
-      #echo '===stdout=='
-      #cat $BNAME.stdout
-      #echo '==========='
-    else
+    if [ "$RETURN_CODE" -ne 0 ]; then
       ERRORS="$ERRORS $DIR/$f=$RETURN_CODE"
       echo "Return code is $RETURN_CODE for $DIR/$f"
       cat $BNAME.stdout
@@ -81,17 +71,15 @@ echo "=== Running tests using $SSLC ==="
 run_tests with_optimizer "-q -p -l -O2 -d -s -n"
 
 
-if [[ -z "${ERRORS}" ]]; then
-  echo "No errors"
-else
+if [[ -n "${ERRORS}" ]]; then
   exit 1
+else
+  echo "No errors"
 fi
 
 # This checks if sslc left some temp files
 TMPFILES=$(find . -type f -iname '*.tmp')
-if [[ -z "${TMPFILES}" ]]; then
-  true; # Ok, no temp files
-else
+if [[ -n "${TMPFILES}" ]]; then
   echo "Found some unexpected temp files:"
   echo $TMPFILES
   exit 1
