@@ -66,5 +66,22 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXIT_RUNTIME")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "$<$<CONFIG:DEBUG>:-g>")
 
+
+  set(PACKAGE_JSON_CONTENT [[
+  {
+    "name": "sslc-emscripten-nodefs",
+    "version": "1.0.0",
+    "description": "",
+    "main": "sslc.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "null"
+  }
+
+  ]])
+  file(WRITE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/package.json "${PACKAGE_JSON_CONTENT}")
+
 endif()
 
