@@ -65,12 +65,12 @@ function run_tests() {
       true # all ok
       # Debugging
       #echo '===stdout=='
-      #cat $(basename -s .ssl $f).stdout
+      #cat $BNAME.stdout
       #echo '==========='
     else
       ERRORS="$ERRORS $DIR/$f=$RETURN_CODE"
       echo "Return code is $RETURN_CODE for $DIR/$f"
-      cat $(basename -s .ssl $f).stdout
+      cat $BNAME.stdout
     fi
   done
   cd ..
