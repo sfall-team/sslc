@@ -25,6 +25,12 @@ jobs:
       - name: Build Debug
         run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
 
+      - name: Test
+        shell: bash
+        run: |
+          ls -laR
+          ./Debug/sslc.exe
+
       - name: Upload Debug
         uses: actions/upload-artifact@v4
         with:
@@ -195,7 +201,7 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          ls -laR          
+          ls -laR
 
           cd artifacts/wasm-emscripten-node-nodefs
           tar -czf ../wasm-emscripten-node-nodefs.tar.gz *
