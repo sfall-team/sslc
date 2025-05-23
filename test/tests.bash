@@ -49,9 +49,9 @@ function run_tests() {
       ERRORS="$ERRORS $DIR/$f=STDOUT"
     fi
 
-    if [ ! -e "$BNAME.ssl" ]; then
-      echo "== UPDATING SSL SNAPSHOT =="
-      cp $BNAME.ssl.testrun $BNAME.ssl
+    if [ ! -e "$BNAME.int" ]; then
+      echo "== UPDATING .int SNAPSHOT =="
+      cp $BNAME.int.testrun $BNAME.int
     fi
 
     if diff $BNAME.int.testrun $BNAME.int ; then
