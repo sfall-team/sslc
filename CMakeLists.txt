@@ -73,11 +73,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     "version": "1.0.0",
     "description": "",
     "main": "sslc.mjs",
+    "type": "module",
     "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",
-    "license": "null"
+    "license": "UNLICENSED"
   }
 
   ]])
