@@ -22,13 +22,13 @@ SSLC=$(realpath "$SSLC")
 
 function run_tests() {
   DIR=$1
-  OPTIMIZER_OPTS=$2
+  COMPILER_OPTS=$2
   cd $DIR
   for f in *.ssl; do
     BNAME=$(basename -s .ssl $f)
     echo "======================= $DIR/$f ========================"
     sed -i 's/\r$//' "$f" # To suppess sslc warnings
-    $SSLC $OPTIMIZER_OPTS -I../include $f -o $BNAME.int.testrun > $BNAME.stdout.testrun
+    $SSLC $COMPILER_OPTS -I../include $f -o $BNAME.int.testrun > $BNAME.stdout.testrun
     RETURN_CODE=$?
 
     sed -i 's/\r$//' $BNAME.stdout
