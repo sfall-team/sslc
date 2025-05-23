@@ -7,7 +7,7 @@ project(${EXECUTABLE_NAME})
 # Set 32-bit flag for all targets because it segfaults on 64-bit
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/package)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(SOURCES
   compile.c
