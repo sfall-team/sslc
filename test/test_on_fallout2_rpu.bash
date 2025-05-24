@@ -1,3 +1,5 @@
+set -e
+
 if [[ -z "${SSLC}" ]]; then
   echo "FAIL: No compiler env variable"
   exit 1
@@ -15,7 +17,7 @@ if [ ! -d 'Fallout2_Restoration_Project' ]; then
   ### Checkout fallout2-rpu
   if true ; then
     echo "== Downloading Fallout2_Restoration_Project scripts =="
-    git clone --depth=1 -n --filter=tree:0 git@github.com:BGforgeNet/Fallout2_Restoration_Project.git
+    git clone --depth=1 -n --filter=tree:0 https://github.com/BGforgeNet/Fallout2_Restoration_Project.git
     cd Fallout2_Restoration_Project
     git sparse-checkout init --cone
     git sparse-checkout set scripts_src
@@ -64,16 +66,21 @@ for f in $(find . -type f -iname '*.ssl') ; do
 
     echo "======================= $DIR/$FNAME ========================"
     cd "$DIR"
+
+    set +e
     $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \
       "-I$MODDERPACK_DIR/scripting_docs/headers" \
       "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
     RETURN_CODE_EXPECTED=$?
+    set -e
     sed -i 's/\r//g' $FBASE.stdout.expected
 
+    set +e
     $SSLC $SSLC_FLAGS \
       "-I$MODDERPACK_DIR/scripting_docs/headers" \
       "$FNAME" -o "$FBASE.int.observed" > "$FBASE.stdout.observed"
     RETURN_CODE_OBSERVED=$?
+    set -e
     sed -i 's/\r//g' "$FBASE.stdout.observed"
 
     if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
