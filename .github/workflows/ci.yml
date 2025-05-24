@@ -159,18 +159,22 @@ jobs:
     defaults:
       run:
         shell: bash
-    container:
-      image: emscripten/emsdk:4.0.8
+    # container:
+    #  image: emscripten/emsdk:4.0.8
     steps:
       - name: Clone
         uses: actions/checkout@v4
 
       - name: Build wasm module
         run: |
-          mkdir -p build
-          cd build
-          emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
-          emmake make
+          docker run --rm --user $(id -u):$(id -g) \
+          -v $(pwd):/src emscripten/emsdk:4.0.8 \
+          sh -c 'mkdir -p build && cd build && emcmake cmake -DCMAKE_BUILD_TYPE="Release" ../ && emmake make'
+          
+          # mkdir -p build
+          # cd build
+          # emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
+          # emmake make
 
       - name: Test
         run: |
