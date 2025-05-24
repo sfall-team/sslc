@@ -32,6 +32,8 @@ jobs:
           (cd test && bash ./tests.bash)
 
       - name: Test on Fallout RPU
+        # Skip this, run huge test only on release build
+        if: false
         shell: bash
         run: |
           export SSLC=../Debug/sslc.exe
