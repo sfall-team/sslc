@@ -35,7 +35,9 @@ jobs:
         shell: bash
         run: |
           export SSLC=../Debug/sslc.exe
-          (cd test && bash ./test_on_fallout2_rpu.bash)
+          pwd
+          ls
+          (cd test && ls -la && bash ./test_on_fallout2_rpu.bash)
 
       - name: Upload Debug
         uses: actions/upload-artifact@v4
