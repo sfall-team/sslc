@@ -68,13 +68,11 @@ for f in $(find . -type f -iname '*.ssl') ; do
       "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
     RETURN_CODE_EXPECTED=$?
     sed -i 's/\r//g' $FBASE.stdout.expected
-    # TODO: Patch file to remove absolute paths
 
     $SSLC $SSLC_FLAGS \
       "-I$MODDERPACK_DIR/scripting_docs/headers" \
       "$FNAME" -o "$FBASE.int.observed" > "$FBASE.stdout.observed"
     RETURN_CODE_OBSERVED=$?
-    # TODO: Patch file to remove absolute paths
     sed -i 's/\r//g' "$FBASE.stdout.observed"
 
     if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
