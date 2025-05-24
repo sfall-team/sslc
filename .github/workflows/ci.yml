@@ -158,6 +158,11 @@ jobs:
           emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
           emmake make
 
+      - name: Test
+        run: |
+          export SSLC=../build/bin/compiler.mjs
+          (cd test && bash ./tests.bash)
+
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
         with:

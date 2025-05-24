@@ -83,5 +83,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   ]])
   file(WRITE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/package.json "${PACKAGE_JSON_CONTENT}")
 
+  file(COPY "compiler.mjs" DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 endif()
 
