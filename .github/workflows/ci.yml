@@ -72,6 +72,7 @@ jobs:
 
       - name: Test on Fallout RPU
         shell: bash
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         run: |
           export SSLC=../Build/compile.exe
           (cd test && bash ./test_on_fallout2_rpu.bash)
@@ -185,6 +186,7 @@ jobs:
 
 
       - name: Test on Fallout RPU
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
@@ -229,6 +231,7 @@ jobs:
           (cd test && bash ./tests.bash)
 
       - name: Test on Fallout RPU
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
