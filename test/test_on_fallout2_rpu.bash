@@ -62,20 +62,20 @@ for f in $(find . -type f -iname '*.ssl') ; do
     FNAME=$(basename $f)
 
     echo "======================= $DIR/$FNAME ========================"
-    cd $DIR
+    cd "$DIR"
     $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \
-      -I$MODDERPACK_DIR/scripting_docs/headers \
-      $FNAME -o $FBASE.int.expected > $FBASE.stdout.expected
+      "-I$MODDERPACK_DIR/scripting_docs/headers" \
+      "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
     RETURN_CODE_EXPECTED=$?
     sed -i 's/\r$//' $FBASE.stdout.expected
     # TODO: Patch file to remove absolute paths
 
     $SSLC $SSLC_FLAGS \
-      -I$MODDERPACK_DIR/scripting_docs/headers \
-      $FNAME -o $FBASE.int.observed > $FBASE.stdout.observed
+      "-I$MODDERPACK_DIR/scripting_docs/headers" \
+      "$FNAME" -o "$FBASE.int.observed" > "$FBASE.stdout.observed"
     RETURN_CODE_OBSERVED=$?
     # TODO: Patch file to remove absolute paths
-    sed -i 's/\r$//' $FBASE.stdout.observed
+    sed -i 's/\r$//' "$FBASE.stdout.observed"
 
     if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
       if [ "$RETURN_CODE_EXPECTED" -ne "$RETURN_CODE_OBSERVED" ]; then
@@ -83,16 +83,16 @@ for f in $(find . -type f -iname '*.ssl') ; do
         ERROR_FILES="$ERROR_FILES $DIR/$FNAME=RETURNCODE"        
       fi
     elif [ "$RETURN_CODE_OBSERVED" -ne 0 ]; then
-       echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-      ERROR_FILES="$ERROR_FILES $DIR/$FNAME=RETURNCODE"        
+        echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
+        ERROR_FILES="$ERROR_FILES $DIR/$FNAME=RETURNCODE"        
     else # Both returned 0
       if ! diff $FBASE.stdout.expected $FBASE.stdout.observed ; then
         echo "=== STDOUT mismatch ==="
-        diff $FBASE.stdout.expected $FBASE.stdout.observed
+        diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
         ERROR_FILES="$ERROR_FILES $DIR/$FNAME=STDOUT"
       fi
 
-      if ! diff $FBASE.int.expected $FBASE.int.observed ; then
+      if ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
         echo "=== .INT FILES DIFFERENT ==="
         ERROR_FILES="$ERROR_FILES $DIR/$FNAME=INT"
       fi
@@ -101,6 +101,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
     cd - >/dev/null 
 done
 
+echo "=== Test results: ==="
 
 if [ -n "$ERROR_FILES" ]; then
   echo "=== Errors found in the following files: ==="
