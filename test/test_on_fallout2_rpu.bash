@@ -6,6 +6,7 @@ fi
 SSLC=$(realpath "$SSLC")
 # echo "Debug: fullpath=$SSLC"
 
+mkdir -p tmp
 cd tmp
 
 # rm -rf *
