@@ -13,9 +13,6 @@ cd tmp
 
 # rm -rf *
 
-MODDERPACK_DIR=$(pwd)/modderspack
-
-
 if [ ! -d 'Fallout2_Restoration_Project' ]; then
   ### Checkout fallout2-rpu
   if true ; then
@@ -25,10 +22,6 @@ if [ ! -d 'Fallout2_Restoration_Project' ]; then
     git sparse-checkout init --cone
     git sparse-checkout set scripts_src
     git checkout
-
-    cd scripts_src
-    ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
-    cd ..
 
     cd ..
     echo "Done"
@@ -43,6 +36,8 @@ if [ ! -d 'Fallout2_Restoration_Project' ]; then
 fi
 
 
+MODDERPACK_DIR=$(pwd)/modderspack
+
 ## Download modderspack
 if [ ! -d 'modderspack' ]; then
   echo "== modderpack =="
@@ -51,6 +46,11 @@ if [ ! -d 'modderspack' ]; then
   echo "Done"
 fi
 
+cd Fallout2_Restoration_Project/scripts_src
+  if [ ! -L 'sfall' ] && [ ! -d 'sfall' ]; then
+    ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
+  fi
+cd ../..
 
 TEST_FAILED_FILES=""
 
