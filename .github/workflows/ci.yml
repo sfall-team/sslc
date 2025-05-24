@@ -69,7 +69,7 @@ jobs:
       - name: Test on Fallout RPU
         shell: bash
         run: |
-          export SSLC=../Debug/sslc.exe
+          export SSLC=../Build/compile.exe
           (cd test && bash ./test_on_fallout2_rpu.bash)
 
       - name: Upload Release
@@ -225,7 +225,7 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt update
           sudo apt install -y wine32
-          export SSLC=../build/bin/compiler.mjs
+          export SSLC=../out/bin/sslc
           export WINE=wine
           (cd test && bash ./test_on_fallout2_rpu.bash)
 
