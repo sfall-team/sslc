@@ -52,7 +52,9 @@ if [ ! -d 'modderspack' ]; then
 fi
 
 
-ERROR_FILES=""
+TEST_FAILED_FILES=""
+
+COMPILATION_FAILED_FILES=""
 
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
@@ -62,7 +64,7 @@ find . -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 find "$MODDERPACK_DIR" -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 
 for f in $(find . -type f -iname '*.ssl') ; do
-    if [ "$f" != "./modoc/mijoshlf.ssl" ]; then
+    if [ "$f" != "./epa/epac8.ssl" ]; then
       # continue # Debugging
       true
     fi
@@ -81,6 +83,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
     RETURN_CODE_EXPECTED=$?
     set -e
     sed -i 's/\r//g' $FBASE.stdout.expected
+    sed -i 's#[a-zA-Z0-9\/\:]*/test/tmp/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected"
 
     set +e
     $SSLC $SSLC_FLAGS \
@@ -89,29 +92,36 @@ for f in $(find . -type f -iname '*.ssl') ; do
     RETURN_CODE_OBSERVED=$?
     set -e
     sed -i 's/\r//g' "$FBASE.stdout.observed"
+    sed -i 's#[a-zA-Z0-9\/\:]*/test/tmp/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.observed"
+    
 
     echo " > expected return code $RETURN_CODE_EXPECTED, observed $RETURN_CODE_OBSERVED"
 
+    # if [ ! -f "$FBASE.int.expected" ]; then
+    #   COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
+    # fi
+
     if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
+      COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
       if [ "$RETURN_CODE_EXPECTED" -ne "$RETURN_CODE_OBSERVED" ]; then
         echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        ERROR_FILES="$ERROR_FILES $DIR/$FNAME=RETURNCODE"        
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"        
       fi
     elif [ "$RETURN_CODE_OBSERVED" -ne 0 ]; then
         echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        ERROR_FILES="$ERROR_FILES $DIR/$FNAME=RETURNCODE"        
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"        
     else # Both returned 0
       if ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
         echo "=== STDOUT mismatch ==="
         set +e
         diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
         set -e
-        ERROR_FILES="$ERROR_FILES $DIR/$FNAME=STDOUT"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=STDOUT"
       fi
 
       if ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
         echo "=== .INT FILES DIFFERENT ==="
-        ERROR_FILES="$ERROR_FILES $DIR/$FNAME=INT"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
       fi
     fi
 
@@ -120,9 +130,15 @@ done
 
 echo "=== Test results: ==="
 
-if [ -n "$ERROR_FILES" ]; then
+if [ -n "$COMPILATION_FAILED_FILES" ]; then
+  echo "=== Compilation errors found in the following files: ==="
+  echo "$COMPILATION_FAILED_FILES"
+  echo "Please check the compilation process and ensure all dependencies are correctly set up."
+fi
+
+if [ -n "$TEST_FAILED_FILES" ]; then
   echo "=== Errors found in the following files: ==="
-  echo "$ERROR_FILES"
+  echo "$TEST_FAILED_FILES"
   exit 1
 else
   echo "=== All tests passed successfully! ==="
