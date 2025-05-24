@@ -59,6 +59,8 @@ COMPILATION_FAILED_FILES=""
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
 cd Fallout2_Restoration_Project/scripts_src
+
+# Remove all \r from files to make diff more predicable and to suppress sslc warnings
 find . -type f -iname '*.ssl' -exec sed -i 's/\r$//' {} \;
 find . -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 find "$MODDERPACK_DIR" -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
@@ -83,7 +85,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
     RETURN_CODE_EXPECTED=$?
     set -e
     sed -i 's/\r//g' $FBASE.stdout.expected
-    sed -i 's#[a-zA-Z0-9\/\:]*/test/tmp/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected"
+    sed -i 's#[a-zA-Z0-9\/\:]*/test/tmp/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
 
     set +e
     $SSLC $SSLC_FLAGS \
