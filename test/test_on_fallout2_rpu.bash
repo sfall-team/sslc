@@ -13,6 +13,9 @@ cd tmp
 
 # rm -rf *
 
+MODDERPACK_DIR=$(pwd)/modderspack
+
+
 if [ ! -d 'Fallout2_Restoration_Project' ]; then
   ### Checkout fallout2-rpu
   if true ; then
@@ -22,6 +25,11 @@ if [ ! -d 'Fallout2_Restoration_Project' ]; then
     git sparse-checkout init --cone
     git sparse-checkout set scripts_src
     git checkout
+
+    cd scripts_src
+    ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
+    cd ..
+
     cd ..
     echo "Done"
   else
@@ -43,7 +51,6 @@ if [ ! -d 'modderspack' ]; then
   echo "Done"
 fi
 
-MODDERPACK_DIR=$(pwd)/modderspack
 
 ERROR_FILES=""
 
@@ -83,6 +90,8 @@ for f in $(find . -type f -iname '*.ssl') ; do
     set -e
     sed -i 's/\r//g' "$FBASE.stdout.observed"
 
+    echo " > expected return code $RETURN_CODE_EXPECTED, observed $RETURN_CODE_OBSERVED"
+
     if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
       if [ "$RETURN_CODE_EXPECTED" -ne "$RETURN_CODE_OBSERVED" ]; then
         echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
@@ -92,9 +101,11 @@ for f in $(find . -type f -iname '*.ssl') ; do
         echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
         ERROR_FILES="$ERROR_FILES $DIR/$FNAME=RETURNCODE"        
     else # Both returned 0
-      if ! diff $FBASE.stdout.expected $FBASE.stdout.observed ; then
+      if ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
         echo "=== STDOUT mismatch ==="
+        set +e
         diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
+        set -e
         ERROR_FILES="$ERROR_FILES $DIR/$FNAME=STDOUT"
       fi
 
