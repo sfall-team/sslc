@@ -66,6 +66,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXIT_RUNTIME")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "$<$<CONFIG:DEBUG>:-g>")
 
+  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sSTACK_SIZE=2048000")
 
   set(PACKAGE_JSON_CONTENT [[
   {

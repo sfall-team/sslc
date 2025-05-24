@@ -57,8 +57,8 @@ async function compile(sslcArgs, wasmBinary) {
   } catch (e) {
     return {
       returnCode: 1,
-      stdout: "",
-      stderr: `ERROR: ${e.name} ${e.message} ${e.stack}`,
+      stdout: stdout.join('\n'),
+      stderr: stderr.join('\n') + `\nERROR: ${e.name} ${e.message} ${e.stack}`,
     };
   }
 }
