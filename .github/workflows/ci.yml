@@ -182,7 +182,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
-          sudo apt install -y wine32
+          sudo apt install -y wine32 p7zip-full
           export SSLC=../build/bin/compiler.mjs
           export WINE=wine
           (cd test && bash ./test_on_fallout2_rpu.bash)
@@ -226,7 +226,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
-          sudo apt install -y wine32
+          sudo apt install -y wine32 p7zip-full
           export SSLC=../out/bin/sslc
           export WINE=wine
           (cd test && bash ./test_on_fallout2_rpu.bash)
