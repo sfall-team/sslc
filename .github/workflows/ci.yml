@@ -186,7 +186,7 @@ jobs:
 
 
       - name: Test on Fallout RPU
-        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check') && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check-wasm')
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
