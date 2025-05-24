@@ -78,6 +78,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
     echo "======================= $DIR/$FNAME ========================"
     cd "$DIR"
 
+    # Expected build
     set +e
     $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \
       "-I$MODDERPACK_DIR/scripting_docs/headers" \
@@ -87,6 +88,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
     sed -i 's/\r//g' $FBASE.stdout.expected
     sed -i 's#[a-zA-Z0-9\/\:]*/test/tmp/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
 
+    # Obvserved build
     set +e
     $SSLC $SSLC_FLAGS \
       "-I$MODDERPACK_DIR/scripting_docs/headers" \
