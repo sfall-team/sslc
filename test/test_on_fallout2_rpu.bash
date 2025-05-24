@@ -48,7 +48,8 @@ fi
 
 cd Fallout2_Restoration_Project/scripts_src
   if [ ! -L 'sfall' ] && [ ! -d 'sfall' ]; then
-    ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
+    # ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
+    ln -s ../../modderspack/scripting_docs/headers sfall
   fi
 cd ../..
 
