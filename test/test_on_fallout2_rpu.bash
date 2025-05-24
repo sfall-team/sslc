@@ -52,7 +52,7 @@ find . -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 find "$MODDERPACK_DIR" -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 
 for f in $(find . -type f -iname '*.ssl') ; do
-    if [ "$f" != "./sierra/wsfeld1c.ssl" ]; then
+    if [ "$f" != "./modoc/mijoshlf.ssl" ]; then
       # continue # Debugging
       true
     fi
@@ -67,7 +67,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
       "-I$MODDERPACK_DIR/scripting_docs/headers" \
       "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
     RETURN_CODE_EXPECTED=$?
-    sed -i 's/\r$//' $FBASE.stdout.expected
+    sed -i 's/\r//g' $FBASE.stdout.expected
     # TODO: Patch file to remove absolute paths
 
     $SSLC $SSLC_FLAGS \
@@ -75,7 +75,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
       "$FNAME" -o "$FBASE.int.observed" > "$FBASE.stdout.observed"
     RETURN_CODE_OBSERVED=$?
     # TODO: Patch file to remove absolute paths
-    sed -i 's/\r$//' "$FBASE.stdout.observed"
+    sed -i 's/\r//g' "$FBASE.stdout.observed"
 
     if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
       if [ "$RETURN_CODE_EXPECTED" -ne "$RETURN_CODE_OBSERVED" ]; then
