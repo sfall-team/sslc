@@ -52,6 +52,11 @@ find . -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 find "$MODDERPACK_DIR" -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 
 for f in $(find . -type f -iname '*.ssl') ; do
+    if [ "$f" != "./sierra/wsfeld1c.ssl" ]; then
+      # continue # Debugging
+      true
+    fi
+
     DIR=$(dirname $f)
     FBASE=$(basename -s .ssl $f)
     FNAME=$(basename $f)
@@ -93,7 +98,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
       fi
     fi
 
-    cd - >/dev/null
+    cd - >/dev/null 
 done
 
 
