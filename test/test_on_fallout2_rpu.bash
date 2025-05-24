@@ -8,12 +8,19 @@ SSLC=$(realpath "$SSLC")
 
 cd tmp
 
-rm -rf *
+# rm -rf *
 
 if [ ! -d 'Fallout2_Restoration_Project' ]; then
   ### Checkout fallout2-rpu
   if true ; then
-    git clone git@github.com:BGforgeNet/Fallout2_Restoration_Project.git
+    echo "== Downloading Fallout2_Restoration_Project scripts =="
+    git clone --depth=1 -n --filter=tree:0 git@github.com:BGforgeNet/Fallout2_Restoration_Project.git
+    cd Fallout2_Restoration_Project
+    git sparse-checkout init --cone
+    git sparse-checkout set scripts_src
+    git checkout
+    cd ..
+    echo "Done"
   else
     mkdir -p Fallout2_Restoration_Project/scripts_src/democity
     echo '
@@ -27,8 +34,10 @@ fi
 
 ## Download modderspack
 if [ ! -d 'modderspack' ]; then
-curl -L https://cyfuture.dl.sourceforge.net/project/sfall/Modders%20pack/modderspack_4.4.6.7z?viasf=1 > modderspack_4.4.6.7z
-7z x modderspack_4.4.6.7z -omodderspack
+  echo "== modderpack =="
+  curl -L https://cyfuture.dl.sourceforge.net/project/sfall/Modders%20pack/modderspack_4.4.6.7z?viasf=1 > modderspack_4.4.6.7z
+  7z x modderspack_4.4.6.7z -omodderspack
+  echo "Done"
 fi
 
 MODDERPACK_DIR=$(pwd)/modderspack
@@ -84,7 +93,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
       fi
     fi
 
-    cd -
+    cd - >/dev/null
 done
 
 
