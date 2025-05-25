@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+// 
+// This is a Node.js wrapper for the SSL Compiler (sslc).
+// It allows to compile SSL files using the Node.js environment.
+//
+// Use it the same way as you would use the `sslc` command-line tool.
+//  
+
 import path from "path";
 import Module from "./sslc.mjs";
 import http from "http";
