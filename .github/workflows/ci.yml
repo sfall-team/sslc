@@ -194,12 +194,12 @@ jobs:
           export SSLC=../build/bin/compiler.mjs
           export WINE=wine
           echo "===starting daemon==="
-          DAEMON=start $SSLC &
+          (cd test && DAEMON=start $SSLC) &
           sleep 3
           echo "===done starting==="
           export DAEMON=use
           (cd test && bash ./test_on_fallout2_rpu.bash)
-          DAEMON=stop $SSLC
+          (cd test && DAEMON=stop $SSLC)
 
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
