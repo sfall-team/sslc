@@ -168,6 +168,11 @@ jobs:
       - name: Clone
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Build wasm module
         run: |
           docker run --rm --user $(id -u):$(id -g) \
