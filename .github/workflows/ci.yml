@@ -83,6 +83,7 @@ jobs:
         with:
           path: test/gamescripts
           key: rpu-and-modderpack-gamescripts-v1000
+          # It will fail if cache was created on the first step. Just re-run this job
           fail-on-cache-miss: true
       - name: Test on Fallout RPU
         shell: bash
