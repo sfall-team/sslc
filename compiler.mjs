@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-// TODO: Make this as "bin" in the package
-
 import path from "path";
 import Module from "./sslc.mjs";
 import http from "http";
