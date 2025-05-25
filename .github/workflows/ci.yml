@@ -193,7 +193,11 @@ jobs:
           sudo apt install -y wine32 p7zip-full
           export SSLC=../build/bin/compiler.mjs
           export WINE=wine
+          DAEMON=start $SSLC &
+          sleep 3
+          export DAEMON=use
           (cd test && bash ./test_on_fallout2_rpu.bash)
+          DAEMON=stop $SSLC
 
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
