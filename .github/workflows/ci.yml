@@ -87,6 +87,7 @@ jobs:
         with:
           path: test/gamescripts
           key: rpu-and-modderpack-gamescripts
+          fail-on-cache-miss: true
       - name: Test on Fallout RPU
         shell: bash
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
@@ -214,6 +215,7 @@ jobs:
         with:
           path: test/gamescripts
           key: rpu-and-modderpack-gamescripts
+          fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check') && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check-wasm')
         run: |
@@ -267,6 +269,7 @@ jobs:
         with:
           path: test/gamescripts
           key: rpu-and-modderpack-gamescripts
+          fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         run: |
