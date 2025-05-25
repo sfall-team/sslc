@@ -4,6 +4,83 @@
 
 import path from "path";
 import Module from "./sslc.mjs";
+import http from "http";
+import fs from "fs";
+
+async function mainWithDaemon() {
+  const daemonPidFile = "/tmp/sslc-daemon.pid";
+  const port = 48293;
+
+  const arg = process.env.DAEMON;
+
+  if (!arg) {
+    return false;
+  }
+  // const cmdArg = process.argv[2] || "";
+
+  if (arg === "start") {
+    fs.writeFileSync(daemonPidFile, process.pid.toString());
+
+    http
+      .createServer((req, res) => {
+        console.info("Incoming request: " + req.url);
+        const args = JSON.parse(decodeURIComponent(req.url.slice(1)));
+        console.info("  Args:", args);
+        compile(args).then(({ stdout, stderr, returnCode }) => {
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              stdout,
+              stderr,
+              returnCode,
+            })
+          );
+        });
+      })
+      .listen(port, () => {
+        console.info("Server started");
+      });
+
+    // Never return from this function
+    await new Promise((r) => {});
+  } else if (arg === "stop") {
+    const targetPid = parseInt(fs.readFileSync(daemonPidFile, "utf8"), 10);
+    console.info(`Stopping daemon with PID ${targetPid}`);
+    process.kill(targetPid, "SIGTERM");
+    process.exit(0);
+  } else if (arg === "use") {
+    // console.info("Using daemon for compilation");
+    await new Promise(() => {
+      http.get(
+        `http://localhost:${port}/` +
+          encodeURIComponent(JSON.stringify(process.argv.slice(2))),
+        (res) => {
+          // console.info("RES")
+          let data = "";
+          res.on("data", (chunk) => {
+            data += chunk.toString();
+          });
+          res.on("end", () => {
+            const response = JSON.parse(data);
+
+            const { stdout, stderr, returnCode } = response;
+            console.log(stdout);
+            if (stderr) {
+              console.error(stderr);
+            }
+            process.exit(returnCode);
+          });
+          res.on("error", (err) => {
+            console.error("Error in response:", err);
+            process.exit(1);
+          });
+        }
+      );
+    });
+  } else {
+    throw new Error(`Unknown arg ${arg}`);
+  }
+}
 
 /**
  *
@@ -13,12 +90,12 @@ import Module from "./sslc.mjs";
  */
 async function compile(sslcArgs, wasmBinary) {
   const stdout = [];
-  const stderr = []
+  const stderr = [];
 
   try {
     const instance = await Module({
-      print: text => stdout.push(text),
-      printErr: text => stderr.push(text),
+      print: (text) => stdout.push(text),
+      printErr: (text) => stderr.push(text),
       noInitialRun: true,
       ...(wasmBinary
         ? {
@@ -51,20 +128,25 @@ async function compile(sslcArgs, wasmBinary) {
 
     return {
       returnCode,
-      stdout: stdout.join('\n'),
-      stderr: stderr.join('\n'),
+      stdout: stdout.join("\n"),
+      stderr: stderr.join("\n"),
     };
   } catch (e) {
     return {
       returnCode: 1,
-      stdout: stdout.join('\n'),
-      stderr: stderr.join('\n') + `\nERROR: ${e.name} ${e.message} ${e.stack}`,
+      stdout: stdout.join("\n"),
+      stderr: stderr.join("\n") + `\nERROR: ${e.name} ${e.message} ${e.stack}`,
     };
   }
 }
 
+if (await mainWithDaemon()) {
+  process.exit(0);
+}
 
-const { stdout, stderr, returnCode } = await compile(process.argv.slice(2))
+const { stdout, stderr, returnCode } = await compile(process.argv.slice(2));
 console.log(stdout);
-if (stderr) { console.error(stderr)};
+if (stderr) {
+  console.error(stderr);
+}
 process.exit(returnCode);
