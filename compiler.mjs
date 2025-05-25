@@ -8,6 +8,16 @@ import http from "http";
 import fs from "fs";
 
 async function mainWithDaemon() {
+  // A daemon mode is introduced to speed up compilation of multple files.
+  // After calling process.exit() the nodejs takes about 4 seconds to finish.
+  //
+  // To speed up CI, we first start the daemon and then use it for compilation.
+  //
+  // This mode is only used in CI.
+  //
+  // This async function returns only if non-daemon mode is used.
+  // If daemon mode is used, it never returns.
+
   const daemonPidFile = "/tmp/sslc-daemon.pid";
   const port = 48293;
 
@@ -61,14 +71,19 @@ async function mainWithDaemon() {
             data += chunk.toString();
           });
           res.on("end", () => {
-            const response = JSON.parse(data);
+            try {
+              const response = JSON.parse(data);
 
-            const { stdout, stderr, returnCode } = response;
-            console.log(stdout);
-            if (stderr) {
-              console.error(stderr);
+              const { stdout, stderr, returnCode } = response;
+              console.log(stdout);
+              if (stderr) {
+                console.error(stderr);
+              }
+              process.exit(returnCode);
+            } catch (e) {
+              console.error("Error with data:", data);
+              process.exit(1);
             }
-            process.exit(returnCode);
           });
           res.on("error", (err) => {
             console.error("Error in response:", err);
