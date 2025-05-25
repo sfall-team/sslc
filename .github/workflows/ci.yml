@@ -17,16 +17,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1000
+          key: rpu-and-modderpack-gamescripts-v1001
 
       - name: Download RPU scripts & modderspack
         shell: bash
         run: |
+          export WINE=wine
           (cd test && bash test_on_fallout2_rpu_setup.bash)
   
   build_windows:
     runs-on: windows-2019
-    needs: [setup_rpu_tests]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -78,13 +78,16 @@ jobs:
           export SSLC=../Build/compile.exe
           (cd test && bash ./tests.bash)
 
-      - name: Get cache RPU & modderspack
+      - name: Cache RPU & modderspack (separate cache for Windows)
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1000
-          # It will fail if cache was created on the first step. Just re-run this job
-          fail-on-cache-miss: true
+          key: rpu-and-modderpack-gamescripts-v1001
+      - name: Download RPU scripts & modderspack
+        shell: bash
+        run: |
+          (cd test && bash test_on_fallout2_rpu_setup.bash)
+  
       - name: Test on Fallout RPU
         shell: bash
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
@@ -211,7 +214,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1000
+          key: rpu-and-modderpack-gamescripts-v1001
           fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check') && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check-wasm')
@@ -265,7 +268,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1000
+          key: rpu-and-modderpack-gamescripts-v1001
           fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
