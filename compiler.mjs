@@ -39,11 +39,7 @@ async function mainWithDaemon() {
         compile(args.sslc, undefined, args.cwd).then(
           ({ stdout, stderr, returnCode }) => {
             res.writeHead(200, { "Content-Type": "application/json" });
-            console.info("  Response:", {
-              stdout,
-              stderr,
-              returnCode,
-            });
+            console.info("  Return code = " + returnCode);
             res.end(
               JSON.stringify({
                 stdout,
