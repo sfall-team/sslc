@@ -18,7 +18,7 @@ TEST_FAILED_FILES=""
 
 COMPILATION_FAILED_FILES=""
 
-## TODO: Them same as in build snapshot
+## TODO: They should be the same as in snapshot build
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
 cd Fallout2_Restoration_Project/scripts_src
@@ -37,6 +37,13 @@ for f in $(find . -type f -iname '*.ssl') ; do
     cd "$DIR"
 
     # Expected build
+    if [ ! -f "$FBASE.returncode.expected" ]; then
+      echo "ERROR: NO EXPECTED RETURN CODE FILE $FBASE.returncode.expected"
+      echo "Please run test/test_on_fallout2_rpu_setup.bash first"
+      echo ""
+      echo "If this error appears on CI then try to bump cache version in all actions/cache@v4"
+      exit 1
+    fi
     RETURN_CODE_EXPECTED=$(cat "$FBASE.returncode.expected")
 
     # Obvserved build
