@@ -138,7 +138,6 @@ echo "=== Test results: ==="
 if [ -n "$COMPILATION_FAILED_FILES" ]; then
   echo "=== Compilation errors found in the following files: ==="
   echo "$COMPILATION_FAILED_FILES"
-  echo "Please check the compilation process and ensure all dependencies are correctly set up."
 fi
 
 if [ -n "$TEST_FAILED_FILES" ]; then
