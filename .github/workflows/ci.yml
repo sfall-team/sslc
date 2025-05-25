@@ -22,6 +22,10 @@ jobs:
       - name: Download RPU scripts & modderspack
         shell: bash
         run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y wine32 p7zip-full
+          export WINE=wine        
           (cd test && bash test_on_fallout2_rpu_setup.bash)
   
   build_windows:
@@ -213,11 +217,7 @@ jobs:
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check') && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check-wasm')
         run: |
-          sudo dpkg --add-architecture i386
-          sudo apt update
-          sudo apt install -y wine32 p7zip-full
           export SSLC=../build/bin/compiler.mjs
-          export WINE=wine
           echo "===starting daemon==="
           (cd test && DAEMON=start $SSLC) &
           sleep 3
@@ -270,11 +270,7 @@ jobs:
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         run: |
-          sudo dpkg --add-architecture i386
-          sudo apt update
-          sudo apt install -y wine32 p7zip-full
           export SSLC=../out/bin/sslc
-          export WINE=wine
           (cd test && bash ./test_on_fallout2_rpu_run.bash)
 
       - name: Upload
