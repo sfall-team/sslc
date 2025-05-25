@@ -36,16 +36,23 @@ async function mainWithDaemon() {
         console.info("Incoming request: " + req.url);
         const args = JSON.parse(decodeURIComponent(req.url.slice(1)));
         console.info("  Args:", args);
-        compile(args).then(({ stdout, stderr, returnCode }) => {
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(
-            JSON.stringify({
+        compile(args.sslc, undefined, args.cwd).then(
+          ({ stdout, stderr, returnCode }) => {
+            res.writeHead(200, { "Content-Type": "application/json" });
+            console.info("  Response:", {
               stdout,
               stderr,
               returnCode,
-            })
-          );
-        });
+            });
+            res.end(
+              JSON.stringify({
+                stdout,
+                stderr,
+                returnCode,
+              })
+            );
+          }
+        );
       })
       .listen(port, () => {
         console.info("Server started");
@@ -63,7 +70,12 @@ async function mainWithDaemon() {
     await new Promise(() => {
       http.get(
         `http://localhost:${port}/` +
-          encodeURIComponent(JSON.stringify(process.argv.slice(2))),
+          encodeURIComponent(
+            JSON.stringify({
+              sslc: process.argv.slice(2),
+              cwd: process.cwd(),
+            })
+          ),
         (res) => {
           // console.info("RES")
           let data = "";
@@ -101,9 +113,10 @@ async function mainWithDaemon() {
  *
  * @param {string[]} sslcArgs Command-line arguments to sslc
  * @param {Uint8Array} [wasmBinary] A compiled binary, if bundler fails to bundle .wasm file
+ * @param {string} [cwd] Current working directory to compile in.
  * @returns {{stdout: string, stderr: string, returnCode: number}}
  */
-async function compile(sslcArgs, wasmBinary) {
+async function compile(sslcArgs, wasmBinary, cwd) {
   const stdout = [];
   const stderr = [];
 
@@ -122,7 +135,9 @@ async function compile(sslcArgs, wasmBinary) {
 
     instance.FS.mkdir("/host");
 
-    const cwd = path.parse(process.cwd());
+    const cwdPath = path.parse(cwd || process.cwd());
+
+    // console.info("DEBUG cwd", cwd);
 
     instance.FS.mount(
       // Using NODEFS instead of NODERAWFS because
@@ -130,13 +145,20 @@ async function compile(sslcArgs, wasmBinary) {
       // runs the second time
       instance.NODEFS,
       {
-        root: cwd.root,
+        root: cwdPath.root,
       },
       "/host"
     );
-    instance.FS.chdir(path.join("host", cwd.dir, cwd.name));
+
+    // console.info("DEBUG after mount");
+
+    instance.FS.chdir(path.join("host", cwdPath.dir, cwdPath.name));
+
+    // console.info("DEBUG after chdir");
 
     const returnCode = instance.callMain(sslcArgs);
+
+    // console.info("DEBUG after call");
 
     instance.FS.chdir("/");
     instance.FS.unmount("/host");
