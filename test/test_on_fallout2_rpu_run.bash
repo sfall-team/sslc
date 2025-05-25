@@ -5,66 +5,23 @@ if [[ -z "${SSLC}" ]]; then
   exit 1
 fi
 
+
+
 SSLC=$(realpath "$SSLC")
 # echo "Debug: fullpath=$SSLC"
 
-mkdir -p tmp
-cd tmp
-
-# rm -rf *
-
-if [ ! -d 'Fallout2_Restoration_Project' ]; then
-  ### Checkout fallout2-rpu
-  if true ; then
-    echo "== Downloading Fallout2_Restoration_Project scripts =="
-    git clone --depth=1 -n --filter=tree:0 https://github.com/BGforgeNet/Fallout2_Restoration_Project.git
-    cd Fallout2_Restoration_Project
-    git sparse-checkout init --cone
-    git sparse-checkout set scripts_src
-    git checkout
-
-    cd ..
-    echo "Done"
-  else
-    mkdir -p Fallout2_Restoration_Project/scripts_src/democity
-    echo '
-    #include <sfall.h>
-    procedure start begin
-    
-    end ' > Fallout2_Restoration_Project/scripts_src/democity/script1.ssl
-  fi
-fi
-
+cd gamescripts
 
 MODDERPACK_DIR=$(pwd)/modderspack
-
-## Download modderspack
-if [ ! -d 'modderspack' ]; then
-  echo "== modderpack =="
-  curl -L https://cyfuture.dl.sourceforge.net/project/sfall/Modders%20pack/modderspack_4.4.6.7z?viasf=1 > modderspack_4.4.6.7z
-  7z x modderspack_4.4.6.7z -omodderspack
-  echo "Done"
-fi
-
-cd Fallout2_Restoration_Project/scripts_src
-  if [ ! -L 'sfall' ] && [ ! -d 'sfall' ]; then
-    # ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
-    ln -s ../../modderspack/scripting_docs/headers sfall
-  fi
-cd ../..
 
 TEST_FAILED_FILES=""
 
 COMPILATION_FAILED_FILES=""
 
+## TODO: They should be the same as in snapshot build
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
 cd Fallout2_Restoration_Project/scripts_src
-
-# Remove all \r from files to make diff more predicable and to suppress sslc warnings
-find . -type f -iname '*.ssl' -exec sed -i 's/\r$//' {} \;
-find . -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
-find "$MODDERPACK_DIR" -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
 
 for f in $(find . -type f -iname '*.ssl') ; do
     if [ "$f" != "./epa/epac8.ssl" ]; then
@@ -80,14 +37,14 @@ for f in $(find . -type f -iname '*.ssl') ; do
     cd "$DIR"
 
     # Expected build
-    set +e
-    $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \
-      "-I$MODDERPACK_DIR/scripting_docs/headers" \
-      "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
-    RETURN_CODE_EXPECTED=$?
-    set -e
-    sed -i 's/\r//g' $FBASE.stdout.expected
-    sed -i 's#[a-zA-Z0-9\/\:]*/test/tmp/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
+    if [ ! -f "$FBASE.returncode.expected" ]; then
+      echo "ERROR: NO EXPECTED RETURN CODE FILE $FBASE.returncode.expected"
+      echo "Please run test/test_on_fallout2_rpu_setup.bash first"
+      echo ""
+      echo "If this error appears on CI then try to bump cache version in all actions/cache@v4"
+      exit 1
+    fi
+    RETURN_CODE_EXPECTED=$(cat "$FBASE.returncode.expected")
 
     # Obvserved build
     set +e
@@ -97,7 +54,8 @@ for f in $(find . -type f -iname '*.ssl') ; do
     RETURN_CODE_OBSERVED=$?
     set -e
     sed -i 's/\r//g' "$FBASE.stdout.observed"
-    sed -i 's#[a-zA-Z0-9\/\:]*/test/tmp/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.observed"
+    sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
+    
     
 
     echo " > expected return code $RETURN_CODE_EXPECTED, observed $RETURN_CODE_OBSERVED"
