@@ -45,6 +45,9 @@ MODDERPACK_DIR=$(pwd)/modderspack
 ## Download modderspack
 if [ ! -d 'modderspack' ]; then
   echo "== modderpack =="
+  sudo apt update
+  sudo apt install -y p7zip-full
+
   curl -L https://cyfuture.dl.sourceforge.net/project/sfall/Modders%20pack/modderspack_4.4.6.7z?viasf=1 > modderspack_4.4.6.7z
   7z x modderspack_4.4.6.7z -omodderspack
   
@@ -90,12 +93,21 @@ for f in $(find . -type f -iname '*.ssl') ; do
 
     cd "$DIR"
 
-    if [[ -f "$FBASE.int.expected" && -f "$FBASE.stdout.expected" && -f "$FBASE.returncode.expected" ]]; then
+    if [[ -f "$FBASE.stdout.expected" && -f "$FBASE.returncode.expected" ]]; then
       echo "$DIR/$FNAME: already built, skipping"
     else
       echo "$DIR/$FNAME: building reference snapshot"
       set +e
-      $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \
+
+      if [ ! -n "$WINE_IS_INSTALLED" ]; then
+        echo "Installing wine"
+        sudo dpkg --add-architecture i386
+        sudo apt update
+        sudo apt install -y wine32
+        WINE_IS_INSTALLED="yes"
+      fi
+
+      wine $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \
         "-I$MODDERPACK_DIR/scripting_docs/headers" \
         "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
       RETURN_CODE_EXPECTED=$?

@@ -22,10 +22,6 @@ jobs:
       - name: Download RPU scripts & modderspack
         shell: bash
         run: |
-          sudo dpkg --add-architecture i386
-          sudo apt update
-          sudo apt install -y wine32 p7zip-full
-          export WINE=wine        
           (cd test && bash test_on_fallout2_rpu_setup.bash)
   
   build_windows:
