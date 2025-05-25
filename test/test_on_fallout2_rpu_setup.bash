@@ -103,7 +103,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
       echo "$DIR/$FNAME: building reference snapshot"
       set +e
 
-      if [ ! -n "$WINE_IS_INSTALLED" && -n "$WINE" ]; then
+      if [[ ! -n "$WINE_IS_INSTALLED" && -n "$WINE" ]]; then
         echo "Installing wine"
         sudo dpkg --add-architecture i386
         sudo apt update
