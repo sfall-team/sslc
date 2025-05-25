@@ -77,6 +77,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     "type": "module",
     "scripts": {
     },
+    "bin": "compiler.mjs",
     "author": "",
     "license": "UNLICENSED"
   }
