@@ -18,6 +18,10 @@ TEST_FAILED_FILES=""
 
 COMPILATION_FAILED_FILES=""
 
+TESTS_FAILED_COUNT=0
+TESTS_SUCCESS_COUNT=0
+EXPECTED_SUCCESSFULL_COMPILED_FILES=0
+
 ## TODO: They should be the same as in snapshot build
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
@@ -46,6 +50,9 @@ for f in $(find . -type f -iname '*.ssl') ; do
       exit 1
     fi
     RETURN_CODE_EXPECTED=$(cat "$FBASE.returncode.expected")
+    if [ "$RETURN_CODE_EXPECTED" -eq 0 ]; then
+        EXPECTED_SUCCESSFULL_COMPILED_FILES=$((EXPECTED_SUCCESSFULL_COMPILED_FILES + 1))
+    fi
 
     # Obvserved build
     set +e
@@ -66,20 +73,23 @@ for f in $(find . -type f -iname '*.ssl') ; do
 
     if [ "$RETURN_CODE_OBSERVED" -ne "$RETURN_CODE_EXPECTED" ]; then
         echo "  > FAIL: Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"        
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"
+        TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
     else
-
-      if ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
+      if [ "$RETURN_CODE_EXPECTED" -eq 0 ] && ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
+        echo "  > FAIL: .INT files mismatch"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
+        TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+      elif ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
         echo "  > FAIL: STDOUT mismatch"
         set +e
         diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
         set -e
         TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=STDOUT"
-      fi
-
-      if [ "$RETURN_CODE_EXPECTED" -eq 0 ] && ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
-        echo "  > FAIL: .INT files mismatch"
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
+        TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+      else
+        TESTS_SUCCESS_COUNT=$((TESTS_SUCCESS_COUNT + 1))
+        echo "  > OK"
       fi
     fi
 
@@ -91,6 +101,20 @@ echo "=== Test results: ==="
 if [ -n "$COMPILATION_FAILED_FILES" ]; then
   echo "=== Compilation errors found in the following files: ==="
   echo "$COMPILATION_FAILED_FILES"
+fi
+
+echo "=== Total tests: $((TESTS_SUCCESS_COUNT + TESTS_FAILED_COUNT)) ==="
+echo "=== Successful tests: $TESTS_SUCCESS_COUNT ==="
+echo "=== Failed tests: $TESTS_FAILED_COUNT ==="
+
+if [ "$TESTS_SUCCESS_COUNT" -eq 0 ]; then
+  echo "ERROR: No tests were run, please check the test files."
+  exit 1
+fi
+
+if [ "$EXPECTED_SUCCESSFULL_COMPILED_FILES" -eq 0 ]; then
+  echo "ERROR: No files were expected to compile successfully, please check the setup."
+  exit 1
 fi
 
 if [ -n "$TEST_FAILED_FILES" ]; then
