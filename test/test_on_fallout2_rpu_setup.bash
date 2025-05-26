@@ -104,11 +104,24 @@ for f in $(find . -type f -iname '*.ssl') ; do
       set +e
 
       if [[ ! -n "$WINE_IS_INSTALLED" && -n "$WINE" ]]; then
-        echo "Installing wine"
-        sudo dpkg --add-architecture i386
-        sudo apt update
-        sudo apt install -y wine32
+        if ! which wine >/dev/null; then
+          echo "Installing wine"
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y wine32
+        fi
         WINE_IS_INSTALLED="yes"
+      fi
+
+      if [[ ! -n "$COMPILER_IS_CHECKED" ]]; then
+        echo "Checking compiler"
+        if $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe | grep -q "Startrek Scripting Language compiler"; then
+          echo "Compiler is ok"
+        else
+          echo "Compiler is not working, please check your modderspack installation"
+          exit 1
+        fi
+        COMPILER_IS_CHECKED="yes"
       fi
 
       $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \

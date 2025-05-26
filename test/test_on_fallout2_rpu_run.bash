@@ -18,6 +18,10 @@ TEST_FAILED_FILES=""
 
 COMPILATION_FAILED_FILES=""
 
+TESTS_FAILED_COUNT=0
+TESTS_SUCCESS_COUNT=0
+EXPECTED_SUCCESSFULL_COMPILED_FILES=0
+
 ## TODO: They should be the same as in snapshot build
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
@@ -33,6 +37,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
     FBASE=$(basename -s .ssl $f)
     FNAME=$(basename $f)
 
+    OLD_PWD=$(pwd)
     echo "======================= $DIR/$FNAME ========================"
     cd "$DIR"
 
@@ -45,6 +50,9 @@ for f in $(find . -type f -iname '*.ssl') ; do
       exit 1
     fi
     RETURN_CODE_EXPECTED=$(cat "$FBASE.returncode.expected")
+    if [ "$RETURN_CODE_EXPECTED" -eq 0 ]; then
+        EXPECTED_SUCCESSFULL_COMPILED_FILES=$((EXPECTED_SUCCESSFULL_COMPILED_FILES + 1))
+    fi
 
     # Obvserved build
     set +e
@@ -58,37 +66,34 @@ for f in $(find . -type f -iname '*.ssl') ; do
     
     
 
-    echo " > expected return code $RETURN_CODE_EXPECTED, observed $RETURN_CODE_OBSERVED"
-
+   
     # if [ ! -f "$FBASE.int.expected" ]; then
     #   COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
     # fi
 
-    if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
-      COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
-      if [ "$RETURN_CODE_EXPECTED" -ne "$RETURN_CODE_OBSERVED" ]; then
-        echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"        
-      fi
-    elif [ "$RETURN_CODE_OBSERVED" -ne 0 ]; then
-        echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"        
-    else # Both returned 0
-      if ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
-        echo "=== STDOUT mismatch ==="
+    if [ "$RETURN_CODE_OBSERVED" -ne "$RETURN_CODE_EXPECTED" ]; then
+        echo "  > FAIL: Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"
+        TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+    else
+      if [ "$RETURN_CODE_EXPECTED" -eq 0 ] && ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
+        echo "  > FAIL: .INT files mismatch"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
+        TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+      elif ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
+        echo "  > FAIL: STDOUT mismatch"
         set +e
         diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
         set -e
         TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=STDOUT"
-      fi
-
-      if ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
-        echo "=== .INT FILES DIFFERENT ==="
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
+        TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+      else
+        TESTS_SUCCESS_COUNT=$((TESTS_SUCCESS_COUNT + 1))
+        echo "  > OK"
       fi
     fi
 
-    cd - >/dev/null 
+    cd "$OLD_PWD"
 done
 
 echo "=== Test results: ==="
@@ -96,6 +101,15 @@ echo "=== Test results: ==="
 if [ -n "$COMPILATION_FAILED_FILES" ]; then
   echo "=== Compilation errors found in the following files: ==="
   echo "$COMPILATION_FAILED_FILES"
+fi
+
+echo "=== Total tests: $((TESTS_SUCCESS_COUNT + TESTS_FAILED_COUNT)) ==="
+echo "=== Successful tests: $TESTS_SUCCESS_COUNT ==="
+echo "=== Failed tests: $TESTS_FAILED_COUNT ==="
+
+if [ "$EXPECTED_SUCCESSFULL_COMPILED_FILES" -eq 0 ]; then
+  echo "ERROR: No files were expected to compile successfully, please check the setup."
+  exit 1
 fi
 
 if [ -n "$TEST_FAILED_FILES" ]; then
