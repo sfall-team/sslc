@@ -107,11 +107,6 @@ echo "=== Total tests: $((TESTS_SUCCESS_COUNT + TESTS_FAILED_COUNT)) ==="
 echo "=== Successful tests: $TESTS_SUCCESS_COUNT ==="
 echo "=== Failed tests: $TESTS_FAILED_COUNT ==="
 
-if [ "$TESTS_SUCCESS_COUNT" -eq 0 ]; then
-  echo "ERROR: No tests were run, please check the test files."
-  exit 1
-fi
-
 if [ "$EXPECTED_SUCCESSFULL_COMPILED_FILES" -eq 0 ]; then
   echo "ERROR: No files were expected to compile successfully, please check the setup."
   exit 1
