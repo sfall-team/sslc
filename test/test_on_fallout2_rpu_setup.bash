@@ -104,10 +104,12 @@ for f in $(find . -type f -iname '*.ssl') ; do
       set +e
 
       if [[ ! -n "$WINE_IS_INSTALLED" && -n "$WINE" ]]; then
-        echo "Installing wine"
-        sudo dpkg --add-architecture i386
-        sudo apt update
-        sudo apt install -y wine32
+        if ! which wine >/dev/null; then
+          echo "Installing wine"
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y wine32
+        fi
         WINE_IS_INSTALLED="yes"
       fi
 
