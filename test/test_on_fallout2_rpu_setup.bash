@@ -113,6 +113,17 @@ for f in $(find . -type f -iname '*.ssl') ; do
         WINE_IS_INSTALLED="yes"
       fi
 
+      if [[ ! -n "$COMPILER_IS_CHECKED" ]]; then
+        echo "Checking compiler"
+        if $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe | grep -q "Startrek Scripting Language compiler"; then
+          echo "Compiler is ok"
+        else
+          echo "Compiler is not working, please check your modderspack installation"
+          exit 1
+        fi
+        COMPILER_IS_CHECKED="yes"
+      fi
+
       $WINE $MODDERPACK_DIR/ScriptEditor/resources/compile.exe $SSLC_FLAGS \
         "-I$MODDERPACK_DIR/scripting_docs/headers" \
         "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
