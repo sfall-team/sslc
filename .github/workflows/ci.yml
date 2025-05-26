@@ -18,7 +18,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1002
+          key: rpu-and-modderpack-gamescripts-v1003
 
       - name: Download RPU scripts & modderspack
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
@@ -85,7 +85,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1002
+          key: rpu-and-modderpack-gamescripts-v1003
       - name: Download RPU scripts & modderspack
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         shell: bash
@@ -219,7 +219,7 @@ jobs:
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1002
+          key: rpu-and-modderpack-gamescripts-v1003
           fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
@@ -274,7 +274,7 @@ jobs:
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1002
+          key: rpu-and-modderpack-gamescripts-v1003
           fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
