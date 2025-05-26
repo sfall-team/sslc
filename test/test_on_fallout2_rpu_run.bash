@@ -33,6 +33,7 @@ for f in $(find . -type f -iname '*.ssl') ; do
     FBASE=$(basename -s .ssl $f)
     FNAME=$(basename $f)
 
+    OLD_PWD=$(pwd)
     echo "======================= $DIR/$FNAME ========================"
     cd "$DIR"
 
@@ -58,37 +59,31 @@ for f in $(find . -type f -iname '*.ssl') ; do
     
     
 
-    echo " > expected return code $RETURN_CODE_EXPECTED, observed $RETURN_CODE_OBSERVED"
-
+   
     # if [ ! -f "$FBASE.int.expected" ]; then
     #   COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
     # fi
 
-    if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
-      COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
-      if [ "$RETURN_CODE_EXPECTED" -ne "$RETURN_CODE_OBSERVED" ]; then
-        echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
+    if [ "$RETURN_CODE_OBSERVED" -ne "$RETURN_CODE_EXPECTED" ]; then
+        echo "  > FAIL: Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
         TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"        
-      fi
-    elif [ "$RETURN_CODE_OBSERVED" -ne 0 ]; then
-        echo "=== Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"        
-    else # Both returned 0
+    else
+
       if ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
-        echo "=== STDOUT mismatch ==="
+        echo "  > FAIL: STDOUT mismatch"
         set +e
         diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
         set -e
         TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=STDOUT"
       fi
 
-      if ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
-        echo "=== .INT FILES DIFFERENT ==="
+      if [ "$RETURN_CODE_EXPECTED" -eq 0 ] && ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
+        echo "  > FAIL: .INT files mismatch"
         TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
       fi
     fi
 
-    cd - >/dev/null 
+    cd "$OLD_PWD"
 done
 
 echo "=== Test results: ==="
