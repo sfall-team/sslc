@@ -1,4 +1,5 @@
 set -e
+set -u
 
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
@@ -84,6 +85,17 @@ if false; then # Some debugging
 fi
 
 
+WINE_IS_INSTALLED=""
+if ! which apt >/dev/null 2>&1; then
+  echo "Runnion on Windows, not using wine"
+  WINE=""
+else
+  echo "Running on Linux, using wine"
+  WINE="wine"
+fi
+
+COMPILER_IS_CHECKED=""
+
 echo "== Fallout2_Restoration_Project building snapshot =="
 COMPILATION_FAILED_FILES=""
 
@@ -109,6 +121,8 @@ for f in $(find . -type f -iname '*.ssl') ; do
           sudo dpkg --add-architecture i386
           sudo apt update
           sudo apt install -y wine32
+        else
+          echo "Wine is already installed"
         fi
         WINE_IS_INSTALLED="yes"
       fi
