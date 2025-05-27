@@ -86,7 +86,7 @@ fi
 
 
 WINE_IS_INSTALLED=""
-if ! which apt >/dev/null; then
+if ! which apt >/dev/null 2>&1; then
   echo "Runnion on Windows, not using wine"
   WINE=""
 else
