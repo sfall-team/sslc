@@ -34,17 +34,17 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O1")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
   set(CMAKE_EXECUTABLE_SUFFIX ".mjs")
 
-
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY")
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY_STACK_SIZE=20480")
+  # No need to use asyncify
+  # target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY")
+  # target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY_STACK_SIZE=20480")
 
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sALLOW_MEMORY_GROWTH")
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-MEMORY_GROWTH_LINEAR_STEP=32mb")
+  target_link_options(${EXECUTABLE_NAME} PRIVATE "-MEMORY_GROWTH_LINEAR_STEP=16mb")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sNO_DISABLE_EXCEPTION_CATCHING")
 
   target_link_options( ${EXECUTABLE_NAME} PRIVATE "-lnodefs.js" )
@@ -60,7 +60,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sENVIRONMENT=node")
 
 
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORTED_RUNTIME_METHODS=callMain,addRunDependency,removeRunDependency")
+  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORTED_RUNTIME_METHODS=callMain")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORT_ALL")
 
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXIT_RUNTIME")
