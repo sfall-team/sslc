@@ -39,12 +39,12 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 
   set(CMAKE_EXECUTABLE_SUFFIX ".mjs")
 
-
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY")
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY_STACK_SIZE=20480")
+  # No need to use asyncify
+  # target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY")
+  # target_link_options(${EXECUTABLE_NAME} PRIVATE "-sASYNCIFY_STACK_SIZE=20480")
 
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sALLOW_MEMORY_GROWTH")
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-MEMORY_GROWTH_LINEAR_STEP=32mb")
+  target_link_options(${EXECUTABLE_NAME} PRIVATE "-MEMORY_GROWTH_LINEAR_STEP=16mb")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sNO_DISABLE_EXCEPTION_CATCHING")
 
   target_link_options( ${EXECUTABLE_NAME} PRIVATE "-lnodefs.js" )
