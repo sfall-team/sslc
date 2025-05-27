@@ -1,114 +1,14 @@
 #!/usr/bin/env node
 
-// 
+//
 // This is a Node.js wrapper for the SSL Compiler (sslc).
 // It allows to compile SSL files using the Node.js environment.
 //
 // Use it the same way as you would use the `sslc` command-line tool.
-//  
+//
 
 import path from "path";
 import Module from "./sslc.mjs";
-import http from "http";
-import fs from "fs";
-
-async function mainWithDaemon() {
-  // A daemon mode is introduced to speed up compilation of multple files.
-  // After calling process.exit() the nodejs takes about 4 seconds to finish.
-  //
-  // To speed up CI, we first start the daemon and then use it for compilation.
-  //
-  // This mode is only used in CI.
-  //
-  // This async function returns only if non-daemon mode is used.
-  // If daemon mode is used, it never returns.
-
-  const daemonPidFile = "/tmp/sslc-daemon.pid";
-  const port = 48293;
-
-  const arg = process.env.DAEMON;
-
-  if (!arg) {
-    return false;
-  }
-  // const cmdArg = process.argv[2] || "";
-
-  if (arg === "start") {
-    fs.writeFileSync(daemonPidFile, process.pid.toString());
-
-    http
-      .createServer((req, res) => {
-        console.info("Incoming request: " + req.url);
-        const args = JSON.parse(decodeURIComponent(req.url.slice(1)));
-        console.info("  Args:", args);
-        compile(args.sslc, undefined, args.cwd).then(
-          ({ stdout, stderr, returnCode }) => {
-            res.writeHead(200, { "Content-Type": "application/json" });
-            console.info("  Return code = " + returnCode);
-            res.end(
-              JSON.stringify({
-                stdout,
-                stderr,
-                returnCode,
-              })
-            );
-          }
-        );
-      })
-      .listen(port, () => {
-        console.info("Server started");
-      });
-
-    // Never return from this function
-    await new Promise((r) => {});
-  } else if (arg === "stop") {
-    const targetPid = parseInt(fs.readFileSync(daemonPidFile, "utf8"), 10);
-    console.info(`Stopping daemon with PID ${targetPid}`);
-    process.kill(targetPid, "SIGTERM");
-    process.exit(0);
-  } else if (arg === "use") {
-    // console.info("Using daemon for compilation");
-    await new Promise(() => {
-      http.get(
-        `http://localhost:${port}/` +
-          encodeURIComponent(
-            JSON.stringify({
-              sslc: process.argv.slice(2),
-              cwd: process.cwd(),
-            })
-          ),
-        (res) => {
-          // console.info("RES")
-          let data = "";
-          res.on("data", (chunk) => {
-            data += chunk.toString();
-          });
-          res.on("end", () => {
-            try {
-              const response = JSON.parse(data);
-
-              const { stdout, stderr, returnCode } = response;
-              console.log(stdout);
-              if (stderr) {
-                console.error(stderr);
-              }
-              process.exit(returnCode);
-            } catch (e) {
-              console.error("Error with data:", data);
-              process.exit(1);
-            }
-          });
-          res.on("error", (err) => {
-            console.error("Error in response:", err);
-            process.exit(1);
-          });
-        }
-      );
-    });
-  } else {
-    throw new Error(`Unknown arg ${arg}`);
-  }
-}
 
 /**
  *
@@ -176,10 +76,6 @@ async function compile(sslcArgs, wasmBinary, cwd) {
       stderr: stderr.join("\n") + `\nERROR: ${e.name} ${e.message} ${e.stack}`,
     };
   }
-}
-
-if (await mainWithDaemon()) {
-  process.exit(0);
 }
 
 const { stdout, stderr, returnCode } = await compile(process.argv.slice(2));
