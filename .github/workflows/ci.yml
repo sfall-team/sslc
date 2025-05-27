@@ -224,13 +224,7 @@ jobs:
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         run: |
           export SSLC=../build/bin/compiler.mjs
-          echo "===starting daemon==="
-          (cd test && DAEMON=start $SSLC) &
-          sleep 3
-          echo "===done starting==="
-          export DAEMON=use
           (cd test && bash ./test_on_fallout2_rpu_run.bash)
-          (cd test && DAEMON=stop $SSLC)
 
       - name: Upload .wasm artifacts
         uses: actions/upload-artifact@v4
