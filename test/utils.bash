@@ -142,6 +142,8 @@ run_tests() {
     if [ "$RETURN_CODE_EXPECTED" -eq 0 ]; then
         EXPECTED_SUCCESSFULL_COMPILED_FILES=$((EXPECTED_SUCCESSFULL_COMPILED_FILES + 1))
     fi
+    # On Windows it might checkout files and automatically use CLRF line endings
+    sed -i 's/\r//g' "$FBASE.stdout.expected"
 
     # Obvserved build
     set +e
