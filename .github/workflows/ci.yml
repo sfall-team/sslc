@@ -24,7 +24,6 @@ jobs:
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         shell: bash
         run: |
-          export WINE=wine
           (cd test && bash test_on_fallout2_rpu_setup.bash)
   
   build_windows:
