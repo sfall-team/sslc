@@ -83,4 +83,4 @@ if false; then # Some debugging
 fi
 
 
-make_test_snapshots "$MODDERPACK_DIR/ScriptEditor/resources/compile.exe"
+make_test_snapshots "$MODDERPACK_DIR/ScriptEditor/resources/compile.exe" "$MODDERPACK_DIR/scripting_docs/headers"

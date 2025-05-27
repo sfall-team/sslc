@@ -13,6 +13,7 @@ clear_test_snapshots() {
 
 make_test_snapshots() {
   REFERENCE_COMPILE_EXE=$1 # Note: it have to be full path to sslc executable
+  INCLUDE_HEADERS_DIR=$2 # Note: it have to be full path or relative to .ssl file
 
   WINE_IS_INSTALLED=""
   if ! which apt >/dev/null 2>&1; then
@@ -68,7 +69,7 @@ make_test_snapshots() {
       fi
 
       $WINE $REFERENCE_COMPILE_EXE $SSLC_FLAGS \
-        "-I$MODDERPACK_DIR/scripting_docs/headers" \
+        "-I$INCLUDE_HEADERS_DIR" \
         "$FNAME" -o "$FBASE.int.expected" > "$FBASE.stdout.expected"
       RETURN_CODE_EXPECTED=$?
       echo -n "$RETURN_CODE_EXPECTED" > "$FBASE.returncode.expected"
@@ -100,7 +101,7 @@ make_test_snapshots() {
 
 run_tests() {
   TESTING_SSLC=$1 # Note: it have to be full path to testing sslc executable
-  INCLUDE_HEADERS_DIR=$2 # Note: it also have to be full path
+  INCLUDE_HEADERS_DIR=$2 # Note: it have to be full path or relative to .ssl file
 
   if [[ ! -f "$TESTING_SSLC" ]]; then
     echo "ERROR: No compiler executable found at $TESTING_SSLC"
