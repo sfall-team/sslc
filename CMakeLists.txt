@@ -60,8 +60,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sENVIRONMENT=node")
 
 
-  # target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORTED_RUNTIME_METHODS=callMain,addRunDependency,removeRunDependency")
-  # target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORT_ALL")
+  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORTED_RUNTIME_METHODS=callMain")
+  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORT_ALL")
 
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXIT_RUNTIME")
   target_link_options(${EXECUTABLE_NAME} PRIVATE "$<$<CONFIG:DEBUG>:-g>")
