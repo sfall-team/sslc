@@ -1,4 +1,5 @@
 set -e
+set -u
 
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 

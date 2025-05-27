@@ -1,4 +1,5 @@
 set -e
+set -u
 
 if [[ -z "${SSLC}" ]]; then
   echo "FAIL: No compiler env variable"
