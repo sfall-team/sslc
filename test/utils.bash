@@ -11,6 +11,9 @@ clear_test_snapshots() {
   echo "Done"
 }
 
+NEW_LINE='
+'
+
 make_test_snapshots() {
   REFERENCE_COMPILE_EXE=$1 # Note: it have to be full path to sslc executable
   INCLUDE_HEADERS_DIR=$2 # Note: it have to be full path or relative to .ssl file
@@ -82,7 +85,7 @@ make_test_snapshots() {
       echo "  Done, return code $RETURN_CODE_EXPECTED"
 
       if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
-        COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
+        COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES$DIR/$FNAME$NEW_LINE"
       fi
 
     fi      
@@ -111,8 +114,6 @@ run_tests() {
   fi
 
   TEST_FAILED_FILES=""
-
-  COMPILATION_FAILED_FILES=""
 
   TESTS_FAILED_COUNT=0
   TESTS_SUCCESS_COUNT=0
@@ -158,27 +159,21 @@ run_tests() {
     sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
     sed -i 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
 
-
-   
-    # if [ ! -f "$FBASE.int.expected" ]; then
-    #   COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
-    # fi
-
     if [ "$RETURN_CODE_OBSERVED" -ne "$RETURN_CODE_EXPECTED" ]; then
         echo "  > FAIL: Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=RETURNCODE$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
     else
       if [ "$RETURN_CODE_EXPECTED" -eq 0 ] && ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
         echo "  > FAIL: .INT files mismatch"
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=INT$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
       elif ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
         echo "  > FAIL: STDOUT mismatch"
         set +e
         diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
         set -e
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=STDOUT"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=STDOUT$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
       else
         TESTS_SUCCESS_COUNT=$((TESTS_SUCCESS_COUNT + 1))
@@ -188,13 +183,6 @@ run_tests() {
 
     cd "$OLD_PWD"
   done
-
-  echo "=== Test results: ==="
-
-  if [ -n "$COMPILATION_FAILED_FILES" ]; then
-    echo "=== Compilation errors found in the following files: ==="
-    echo "$COMPILATION_FAILED_FILES"
-  fi
 
   echo "=== Total tests: $((TESTS_SUCCESS_COUNT + TESTS_FAILED_COUNT)) ==="
   echo "=== Successful tests: $TESTS_SUCCESS_COUNT ==="
