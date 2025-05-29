@@ -77,6 +77,8 @@ make_test_snapshots() {
       sed -i 's/\r//g' $FBASE.stdout.expected
       # sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
       sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
+      sed -i 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
+
       echo "  Done, return code $RETURN_CODE_EXPECTED"
 
       if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
@@ -154,8 +156,8 @@ run_tests() {
     set -e
     sed -i 's/\r//g' "$FBASE.stdout.observed"
     sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
-    
-    
+    sed -i 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
+
 
    
     # if [ ! -f "$FBASE.int.expected" ]; then
