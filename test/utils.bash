@@ -115,8 +115,6 @@ run_tests() {
 
   TEST_FAILED_FILES=""
 
-  COMPILATION_FAILED_FILES=""
-
   TESTS_FAILED_COUNT=0
   TESTS_SUCCESS_COUNT=0
   EXPECTED_SUCCESSFULL_COMPILED_FILES=0
@@ -161,12 +159,6 @@ run_tests() {
     sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
     sed -i 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
 
-
-   
-    # if [ ! -f "$FBASE.int.expected" ]; then
-    #   COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
-    # fi
-
     if [ "$RETURN_CODE_OBSERVED" -ne "$RETURN_CODE_EXPECTED" ]; then
         echo "  > FAIL: Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
         TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"
@@ -191,13 +183,6 @@ run_tests() {
 
     cd "$OLD_PWD"
   done
-
-  echo "=== Test results: ==="
-
-  if [ -n "$COMPILATION_FAILED_FILES" ]; then
-    echo "=== Compilation errors found in the following files: ==="
-    echo "$COMPILATION_FAILED_FILES"
-  fi
 
   echo "=== Total tests: $((TESTS_SUCCESS_COUNT + TESTS_FAILED_COUNT)) ==="
   echo "=== Successful tests: $TESTS_SUCCESS_COUNT ==="
