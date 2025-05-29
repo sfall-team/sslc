@@ -161,19 +161,19 @@ run_tests() {
 
     if [ "$RETURN_CODE_OBSERVED" -ne "$RETURN_CODE_EXPECTED" ]; then
         echo "  > FAIL: Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=RETURNCODE"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=RETURNCODE$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
     else
       if [ "$RETURN_CODE_EXPECTED" -eq 0 ] && ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
         echo "  > FAIL: .INT files mismatch"
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=INT"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=INT$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
       elif ! diff -q $FBASE.stdout.expected $FBASE.stdout.observed ; then
         echo "  > FAIL: STDOUT mismatch"
         set +e
         diff "$FBASE.stdout.expected" "$FBASE.stdout.observed"
         set -e
-        TEST_FAILED_FILES="$TEST_FAILED_FILES $DIR/$FNAME=STDOUT"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=STDOUT$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
       else
         TESTS_SUCCESS_COUNT=$((TESTS_SUCCESS_COUNT + 1))
