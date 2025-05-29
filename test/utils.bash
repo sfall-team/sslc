@@ -11,6 +11,9 @@ clear_test_snapshots() {
   echo "Done"
 }
 
+NEW_LINE='
+'
+
 make_test_snapshots() {
   REFERENCE_COMPILE_EXE=$1 # Note: it have to be full path to sslc executable
   INCLUDE_HEADERS_DIR=$2 # Note: it have to be full path or relative to .ssl file
@@ -82,7 +85,7 @@ make_test_snapshots() {
       echo "  Done, return code $RETURN_CODE_EXPECTED"
 
       if [ "$RETURN_CODE_EXPECTED" -ne 0 ]; then
-        COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES $DIR/$FNAME"
+        COMPILATION_FAILED_FILES="$COMPILATION_FAILED_FILES$DIR/$FNAME$NEW_LINE"
       fi
 
     fi      
