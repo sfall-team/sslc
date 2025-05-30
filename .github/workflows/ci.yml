@@ -36,12 +36,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\ProgramData\chocolatey\lib
-          key: choco-vs2019-xp-${{ runner.os }}
+          key: choco-vs2017-xp-${{ runner.os }}
 
       - name: Install v141_xp toolset
         shell: cmd
         run: |
-          choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.140 --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
+          choco install visualstudio2017buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.140 --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
 
       - name: Patch vcxproj to use v141_xp toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
@@ -57,7 +57,7 @@ jobs:
       - name: Build Debug
         shell: cmd
         run: |
-         "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+         "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
           && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
 
       - name: Test
@@ -89,7 +89,7 @@ jobs:
       - name: Build Release
         shell: cmd
         run: |
-         "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+         "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
           && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
 
       - name: Test
@@ -137,7 +137,7 @@ jobs:
       - name: Build Release dll
         shell: cmd
         run: |
-         "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+         "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
           && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
 
       - name: Upload Release dll
