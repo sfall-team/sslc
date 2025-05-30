@@ -52,6 +52,7 @@ jobs:
         run: sed -i 's|MultiThreadedDebugDLL|MultiThreadedDebug|g' sslc.vcxproj
 
       - name: List Visual Studio directories
+        shell: cmd
         run: |
           dir "C:\Program Files (x86)\Microsoft Visual Studio" /s /b
 
