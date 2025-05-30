@@ -51,6 +51,10 @@ jobs:
       - name: Patch vcxproj to link debug build statically
         run: sed -i 's|MultiThreadedDebugDLL|MultiThreadedDebug|g' sslc.vcxproj
 
+      - name: List Visual Studio directories
+        run: |
+          dir "C:\Program Files (x86)\Microsoft Visual Studio" /s /b
+
       - name: Build Debug
         shell: cmd
         run: |
