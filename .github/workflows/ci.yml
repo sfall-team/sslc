@@ -67,7 +67,7 @@ jobs:
       - name: Build Debug
         shell: cmd
         run: |
-         "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
+         call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
           && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
 
       - name: Test
@@ -99,7 +99,7 @@ jobs:
       - name: Build Release
         shell: cmd
         run: |
-         "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
+         call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
           && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
 
       - name: Test
@@ -147,7 +147,7 @@ jobs:
       - name: Build Release dll
         shell: cmd
         run: |
-         "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
+         call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars32.bat" ^
           && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
 
       - name: Upload Release dll
