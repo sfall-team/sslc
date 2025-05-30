@@ -32,6 +32,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Cache Visual Studio Build Tools (basic)
+        uses: actions/cache@v4
+        with:
+          path: C:\ProgramData\chocolatey\lib
+          key: choco-vs2017-xp-${{ runner.os }}
+
+      - name: Install v141_xp toolset
+        run: |
+          choco install visualstudio2017buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.140 --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
