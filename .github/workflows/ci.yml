@@ -38,14 +38,18 @@ jobs:
           path: C:\ProgramData\chocolatey\lib
           key: choco-vs2019-xp-${{ runner.os }}
 
+      - name: Install v141_xp toolset properly
+        run: |
+          choco install visualstudio2019buildtools --package-parameters `
+            "--add Microsoft.VisualStudio.Workload.VCTools `
+                   --add Microsoft.VisualStudio.Component.VC.140 `
+                   --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
+
       - name: Install v141_xp toolset
         run: |
           choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.140 --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Update toolset
+      - name: Patch vcxproj to use v141_xp toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
 
       - name: Patch vcxproj to link debug build statically
