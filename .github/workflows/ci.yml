@@ -38,10 +38,18 @@ jobs:
           path: C:\ProgramData\chocolatey\lib
           key: choco-vs2017-xp-${{ runner.os }}
 
-      - name: Install v141_xp toolset
-        shell: cmd
+#      - name: Install v141_xp toolset
+#        shell: cmd
+#        run: |
+#          choco install visualstudio2017buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.140 --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
+      - name: Download Visual Studio 2017 Build Tools installer
+        run: curl -LO https://aka.ms/vs/15/release/vs_BuildTools.exe
+
+      - name: Install Visual Studio 2017 Build Tools with v141_xp
         run: |
-          choco install visualstudio2017buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.140 --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
+          .\vs_BuildTools.exe --quiet --wait --norestart --nocache ^
+            --add Microsoft.VisualStudio.Workload.VCTools ^
+            --add Microsoft.VisualStudio.Component.VC.v141.xp
 
       - name: Patch vcxproj to use v141_xp toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
