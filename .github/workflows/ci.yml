@@ -48,7 +48,7 @@ jobs:
       - name: Update toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
 
-      - name: Link statically
+      - name: Patch vcxproj to link debug build statically
         run: sed -i 's|MultiThreadedDebugDLL|MultiThreadedDebug|g' sslc.vcxproj
 
       - name: Build Debug
