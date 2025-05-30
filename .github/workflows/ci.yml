@@ -39,11 +39,9 @@ jobs:
           key: choco-vs2019-xp-${{ runner.os }}
 
       - name: Install v141_xp toolset properly
+        shell: cmd
         run: |
-          choco install visualstudio2019buildtools --package-parameters `
-            "--add Microsoft.VisualStudio.Workload.VCTools `
-                   --add Microsoft.VisualStudio.Component.VC.140 `
-                   --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
+          choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.140 --add Microsoft.VisualStudio.Component.VC.v141.xp" -y
 
       - name: Install v141_xp toolset
         run: |
