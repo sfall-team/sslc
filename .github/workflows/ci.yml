@@ -27,7 +27,7 @@ jobs:
           (cd test && bash test_on_fallout2_rpu_setup.bash)
   
   build_windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
