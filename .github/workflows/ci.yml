@@ -55,6 +55,12 @@ jobs:
             --add Microsoft.VisualStudio.Component.VC.v141.xp ^
             --includeRecommended
 
+      - name: Check v141_xp installation
+        shell: cmd
+        run: |
+          dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC" /b
+          dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build" /b
+
       - name: Patch vcxproj to use v141_xp toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
 
