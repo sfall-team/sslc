@@ -53,6 +53,8 @@ jobs:
             --add Microsoft.VisualStudio.Workload.VCTools ^
             --add Microsoft.VisualStudio.Component.VC.Tools.v141 ^
             --add Microsoft.VisualStudio.Component.VC.v141.xp ^
+            --add Microsoft.VisualStudio.Component.WinXP ^
+            --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP
             --includeRecommended
 
       - name: Check v141_xp installation
