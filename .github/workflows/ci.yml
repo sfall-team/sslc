@@ -52,7 +52,8 @@ jobs:
             --add Microsoft.VisualStudio.Component.Windows10SDK.10240 ^
             --add Microsoft.VisualStudio.Workload.VCTools ^
             --add Microsoft.VisualStudio.Component.VC.Tools.v141 ^
-            --add Microsoft.VisualStudio.Component.VC.v141.xp
+            --add Microsoft.VisualStudio.Component.VC.v141.xp ^
+            --includeRecommended
 
       - name: Patch vcxproj to use v141_xp toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
