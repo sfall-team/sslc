@@ -27,22 +27,38 @@ jobs:
           (cd test && bash test_on_fallout2_rpu_setup.bash)
   
   build_windows:
-    runs-on: windows-2019
+    runs-on: windows-2025
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Cache Visual Studio Build Tools (basic)
+        uses: actions/cache@v4
+        with:
+          path: C:\ProgramData\chocolatey\lib
+          key: choco-vs2019-xp-${{ runner.os }}
 
-      - name: Update toolset
+      - name: Install Visual Studio 2019 Build Tools with v141_xp
+        shell: cmd
+        run: |
+          choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
+
+      - name: Patch vcxproj to use v141_xp toolset
         run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
 
-      - name: Link statically
+      - name: Patch vcxproj to link debug build statically
         run: sed -i 's|MultiThreadedDebugDLL|MultiThreadedDebug|g' sslc.vcxproj
 
+      - name: List Visual Studio directories
+        shell: cmd
+        run: |
+          dir "C:\Program Files (x86)\Microsoft Visual Studio" /s /b
+
       - name: Build Debug
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
 
       - name: Test
         shell: bash
@@ -71,7 +87,10 @@ jobs:
         run: mkdir -p Build
 
       - name: Build Release
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
 
       - name: Test
         shell: bash
@@ -116,7 +135,10 @@ jobs:
       #       **/Build/*.exe
 
       - name: Build Release dll
-        run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
 
       - name: Upload Release dll
         uses: actions/upload-artifact@v4
