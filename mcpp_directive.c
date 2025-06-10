@@ -1199,7 +1199,7 @@ DEFBUF *    install_macro(
         s_parmnames = 0;
     s_repl = strlen( repl) + 1;
     dp = (DEFBUF *)
-        xmalloc( sizeof (DEFBUF) + s_name + s_parmnames + s_repl);
+        xmalloc( sizeof (DEFBUF) + s_name + 1 + s_parmnames + s_repl);
     if (cmp || (standard && (*prevp)->push)) {  /* New definition   */
         dp->link = defp;                /* Insert to linked list    */
         *prevp = dp;
@@ -1211,12 +1211,12 @@ DEFBUF *    install_macro(
     dp->nargs = predefine ? predefine : numargs;
     if (standard) {
         dp->push = 0;
-        dp->parmnames = (char *)dp + sizeof (DEFBUF) + s_name;
+        dp->parmnames = (char *)dp + sizeof (DEFBUF) + s_name + 1;
         dp->repl = dp->parmnames + s_parmnames;
         if (mcpp_mode == STD)
             memcpy( dp->parmnames, parmnames, s_parmnames);
     } else {
-        dp->repl = (char *)dp + sizeof (DEFBUF) + s_name;
+        dp->repl = (char *)dp + sizeof (DEFBUF) + s_name + 1;
     }
     memcpy( dp->name, name, s_name + 1);
     memcpy( dp->repl, repl, s_repl);

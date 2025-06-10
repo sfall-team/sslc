@@ -3,6 +3,13 @@
 #include <string.h>
 #include <stdarg.h>
 #include <setjmp.h>
+#include <stdint.h>
+#ifdef _WIN32
+// Windows has _stricmp
+#else
+#include <strings.h>
+#define _stricmp strcasecmp
+#endif
 
 #include "parse.h"
 #include "parselib.h"
@@ -58,7 +65,8 @@ int expressionNesting = 0;
 static void freeVariableList(VariableList *v);
 static void freeVariable(Variable *v);
 static void parseWhile(Procedure *p, NodeList *n);
-static int writeBlock(NodeList *n, int i, FILE *f);
+int writeBlock(NodeList *n, int i, FILE *f);
+int variable(VariableList *v, char **names, int type, char allowArrays, int allowMulti);
 
 extern FILE* parseroutput;
 
@@ -270,7 +278,7 @@ static int findName(char *namelist, char *name) {
 
 	if (!namelist) return -1;
 
-	n = namelist + 4;
+	n = namelist + sizeof(uint32_t);
 	while (*(unsigned short *)n != 0xffff) {
 		if (_stricmp(n + 2, name) == 0)
 			return n + 2 - namelist;
@@ -284,7 +292,7 @@ static int findString(char *namelist, char *name) {
 
 	if (!namelist) return -1;
 
-	n = namelist + 4;
+	n = namelist + sizeof(uint32_t);
 	while (*(unsigned short *)n != 0xffff) {
 		if (strcmp(n + 2, name) == 0)
 			return n + 2 - namelist;
@@ -323,27 +331,27 @@ static int addName(char **namelist, char *name) {
 	}
 
 	if (!n) {
-		n = (char*)malloc(4 + 2 + slen + 2);
-		*(long *)n = 2 + slen;
-		c = n + 4;
+		n = (char*)malloc(sizeof(uint32_t) + 2 + slen + 2);
+		*(uint32_t *)n = 2 + slen;
+		c = n + sizeof(uint32_t);
 	}
 	else {
 		int i;
 
-		tlen = *(long *)n;
+		tlen = *(uint32_t *)n;
 		i = findName(n, name);
 		if (i != -1)
 			return i;
 
-		/* 4 for main header
+		/* sizeof(uint32_t) for main header
 		tlen for old total length
 		2 for this string's header
 		slen for this string's length
 		2 for ending length
 		*/
-		n = (char*)realloc(n, 4 + tlen + 2 + slen + 2);
-		*(long *)n = tlen + 2 + slen;
-		c = n + 4 + tlen;
+		n = (char*)realloc(n, sizeof(uint32_t) + tlen + 2 + slen + 2);
+		*(uint32_t *)n = tlen + 2 + slen;
+		c = n + sizeof(uint32_t) + tlen;
 	}
 	*(unsigned short *)c = slen;
 	*(unsigned short *)(c + 2 + slen) = 0xffff;
@@ -367,27 +375,27 @@ static int addString(char **namelist, char *name) {
 	}
 
 	if (!n) {
-		n = (char*)malloc(4 + 2 + slen + 2);
-		*(long *)n = 2 + slen;
-		c = n + 4;
+		n = (char*)malloc(sizeof(uint32_t) + 2 + slen + 2);
+		*(uint32_t *)n = 2 + slen;
+		c = n + sizeof(uint32_t);
 	}
 	else {
 		int i;
 
-		tlen = *(long *)n;
+		tlen = *(uint32_t *)n;
 		i = findString(n, name);
 		if (i != -1)
 			return i;
 
-		/* 4 for main header
+		/* sizeof(uint32_t) for main header
 		tlen for old total length
 		2 for this string's header
 		slen for this string's length
 		2 for ending length
 		*/
-		n = (char*)realloc(n, 4 + tlen + 2 + slen + 2);
-		*(long *)n = tlen + 2 + slen;
-		c = n + 4 + tlen;
+		n = (char*)realloc(n, sizeof(uint32_t) + tlen + 2 + slen + 2);
+		*(uint32_t *)n = tlen + 2 + slen;
+		c = n + sizeof(uint32_t) + tlen;
 	}
 	*(unsigned short *)c = slen;
 	*(unsigned short *)(c + 2 + slen) = 0xffff;
@@ -536,7 +544,7 @@ int addVariable(VariableList *var, char **namelist, int type, char *name) {
 void GenTmpVar(Procedure *p, LexData* lex) {
 	lex->stringData = (char*)malloc(16);
 	lex->token = T_SYMBOL;
-	sprintf_s(lex->stringData, 16, "tmp.%d", tmpCounter++);
+	snprintf(lex->stringData, 16, "tmp.%d", tmpCounter++);
 	addVariable(&p->variables, &p->namelist, V_LOCAL, lex->stringData);
 }
 
@@ -893,7 +901,7 @@ static int export(Program *p, char **names) {
 }
 
 /* Parse the syntax for declaring global and local variables of the procedures */
-static int variable(VariableList *v, char **names, int type, char allowArrays, int allowMulti) {
+int variable(VariableList *v, char **names, int type, char allowArrays, int allowMulti) {
 	if (expectToken(T_VARIABLE) == -1) return 1;
 
 	if (expectToken(T_BEGIN) != -1) { // sfall addition
@@ -1686,7 +1694,7 @@ static void parseWhile(Procedure *p, NodeList *n) {
 void CloneLexData(LexData *dest, LexData *source) {
 	*dest = *source;
 	dest->stringData = malloc(strlen(source->stringData) + 1);
-	strcpy_s(dest->stringData, strlen(source->stringData) + 1, source->stringData);
+	strncpy(dest->stringData, source->stringData, strlen(source->stringData) + 1);
 }
 
 
@@ -2010,12 +2018,13 @@ void parse(InputStream *stream, const char *output) {
 		if (dumpTree) {
 			char name[260] = "";
 			char *c;
-			strcpy_s(name, 260, output);
+			strncpy(name, output, 259);
+			name[259] = '\0';
 			c = strrchr(name, '.');
 			if (c) {
 				*c = 0;
 			}
-			strcat_s(name, 260, "_tree.txt");
+			strncat(name, "_tree.txt", 259 - strlen(name));
 			dumpAllNodes(name);
 		}
 		generateCode(currentProgram, output);

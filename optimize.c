@@ -8,6 +8,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+// Windows has _stricmp
+#else
+#include <strings.h>
+#define _stricmp strcasecmp
+#endif
 
 #define Protect(a) if (_stricmp(c, a) == 0) return 1;
 

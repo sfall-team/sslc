@@ -471,7 +471,7 @@ extern void     do_pragma( void);
                 /* Process #pragma directive    */
 extern void     do_old( void);
                 /* Process older directives     */
-#if ! HOST_HAVE_STPCPY
+#if ! HOST_HAVE_STPCPY && !defined(__APPLE__)
 extern char *   stpcpy( char * dest, const char * src);
                 /* Non-Standard library function*/
 #endif

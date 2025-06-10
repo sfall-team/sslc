@@ -39,20 +39,28 @@
 #include    "system.H"
 #include    "internal.H"
 
+#ifdef _WIN32
 #include    "direct.h"
 #define getcwd( buf, size)  _getcwd( buf, size)
+#define S_IFREG     _S_IFREG
+#define S_IFDIR     _S_IFDIR
+#define stat( path, stbuf)  _stat( path, stbuf)
+#else
+#include    <unistd.h>
+#endif
 #include    "sys/types.h"
 #include    "sys/stat.h"                        /* For stat()       */
 #if     ! defined( S_ISREG)
 #define S_ISREG( mode)  (mode & S_IFREG)
 #define S_ISDIR( mode)  (mode & S_IFDIR)
 #endif
-#define S_IFREG     _S_IFREG
-#define S_IFDIR     _S_IFDIR
-#define stat( path, stbuf)  _stat( path, stbuf)
 
 /* Function to compare path-list    */
+#ifdef _WIN32
 #define stricmp( str1, str2)        _stricmp( str1, str2)
+#else
+#define stricmp( str1, str2)        strcasecmp( str1, str2)
+#endif
 #define str_case_eq( str1, str2)    (stricmp( str1, str2) == 0)
 
 /*
@@ -655,7 +663,11 @@ static char *   norm_path(
     size_t  start_pos = 0;
     char    slbuf1[ PATHMAX+1];             /* Working buffer       */
 
+#ifdef _WIN32
     struct _stat    st_buf;
+#else
+    struct stat     st_buf;
+#endif
 
     if (! dir || (*dir && is_full_path( fname)))
         cfatal( "Bug: Wrong argument to norm_path()"        /* _F_  */
@@ -1699,7 +1711,7 @@ static int  mcpp_getopt(
     return  c;
 }
 
-#if ! HOST_HAVE_STPCPY
+#if ! HOST_HAVE_STPCPY && !defined(__APPLE__)
 char *  stpcpy(
     char *          dest,
     const char *    src

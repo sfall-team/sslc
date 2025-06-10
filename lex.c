@@ -2,13 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef _WIN32
+// Windows has _stricmp
+#else
+#include <strings.h>
+#define _stricmp strcasecmp
+#endif
 #include "lex.h"
 #include "parse.h"
 #include "parselib.h"
 #include "extra.h"
 
 LexData lexData;
-static char *tokens[256+T_END_TOKEN];
+char *tokens[256+T_END_TOKEN];
 static struct {
 	LexData c;
 	char *name;
@@ -43,11 +49,11 @@ static int fileNameSize=0;
 static char **fileNames=0;
 const char *AddFileName(const char *c) {
 	if(fileNameSize==0) {
-		fileNames=(char**)malloc(8*4);
+		fileNames=(char**)malloc(8*sizeof(char*));
 		fileNameSize=8;
 	} else if(numFileNames==fileNameSize-1) {
 		fileNameSize+=8;
-		fileNames=(char**)realloc(fileNames, fileNameSize*4);
+		fileNames=(char**)realloc(fileNames, fileNameSize*sizeof(char*));
 	}
 	fileNames[numFileNames]=(char*)malloc(strlen(c)+1);
 	strcpy(fileNames[numFileNames], c);
@@ -485,6 +491,10 @@ static void parseString(char *buf, int skipEsc)
 			}
 		}
 
+		if (i >= 10239) {  // Leave space for null terminator
+			parseError("String too long (maximum 10239 characters)");
+			break;
+		}
 		buf[i++] = c;
 	}
 
@@ -516,7 +526,7 @@ int lexGetColumn(InputStream *s) {
 */
 int lex_internal(void) {
 	int c, i;
-	static char buf[2][1024];
+	static char buf[2][10240];
 	static int which;
 	int ret;
 

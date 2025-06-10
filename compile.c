@@ -1,11 +1,19 @@
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_RAND_S
 #include <Windows.h>
+#include <io.h>
+#else
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <glob.h>
+#include <string.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include "lex.h"
 #include "parse.h"
-#include <io.h>
 
 #include "resource.h"
 
@@ -24,17 +32,58 @@ int dumpTree = 0;
 int shortCircuit = 0;
 FILE *parseroutput;
 
+#ifdef _WIN32
 #define FINDDATA _finddata_t
 #define FINDFIRST(x, y) _findfirst(x, y)
 #define FINDNEXT(x, y) _findnext(x, y)
 #define FINDCLOSE(x, y) _findclose(x)
 #define FINDHANDLE long
-//#define BAD_HANDLE -1
-
 #if defined(_MSC_VER)
 #define FIND_SUCCESS(x)	((x) != -1)
 #else
 #define FIND_SUCCESS(x)	((x) == 0)
+#endif
+#else
+// POSIX file search using glob
+typedef struct {
+	glob_t glob_data;
+	size_t current_index;
+	char name[260];
+} posix_finddata_t;
+
+#define FINDDATA posix_finddata_t
+#define FINDHANDLE posix_finddata_t*
+#define FIND_SUCCESS(x) ((x) != NULL)
+
+static FINDHANDLE posix_findfirst(const char* pattern, FINDDATA* data) {
+	if (glob(pattern, GLOB_NOSORT, NULL, &data->glob_data) == 0 && data->glob_data.gl_pathc > 0) {
+		data->current_index = 0;
+		const char* basename = strrchr(data->glob_data.gl_pathv[0], '/');
+		strncpy(data->name, basename ? basename + 1 : data->glob_data.gl_pathv[0], 259);
+		data->name[259] = '\0';
+		return data;
+	}
+	return NULL;
+}
+
+static int posix_findnext(FINDHANDLE handle __attribute__((unused)), FINDDATA* data) {
+	data->current_index++;
+	if (data->current_index < data->glob_data.gl_pathc) {
+		const char* basename = strrchr(data->glob_data.gl_pathv[data->current_index], '/');
+		strncpy(data->name, basename ? basename + 1 : data->glob_data.gl_pathv[data->current_index], 259);
+		data->name[259] = '\0';
+		return 0;
+	}
+	return -1;
+}
+
+static void posix_findclose(FINDHANDLE handle __attribute__((unused)), FINDDATA* data) {
+	globfree(&data->glob_data);
+}
+
+#define FINDFIRST(x, y) posix_findfirst(x, y)
+#define FINDNEXT(x, y) posix_findnext(x, y)
+#define FINDCLOSE(x, y) posix_findclose(x, y)
 #endif
 
 static void PrintLogo() {
@@ -58,7 +107,7 @@ int main(int argc, char **argv)
 {
 	InputStream foo;
 	char name[260], *c, *file;
-	struct FINDDATA buf;
+	FINDDATA buf;
 	FINDHANDLE handle;
 	int nologo=0;
 	int preprocess=0;
@@ -184,9 +233,19 @@ int main(int argc, char **argv)
 				if(argc>=2&&!strcmp(argv[1], "-o")) {
 					argv+=2;
 					argc-=2;
+#ifdef _WIN32
 					strcpy_s(name, 260, argv[0]);
+#else
+					strncpy(name, argv[0], 259);
+					name[259] = '\0';
+#endif
 				} else {
+#ifdef _WIN32
 					strcpy_s(name, 260, buf.name);
+#else
+					strncpy(name, buf.name, 259);
+					name[259] = '\0';
+#endif
 					c = strrchr(name, '.');
 
 					if (c) {
@@ -194,22 +253,38 @@ int main(int argc, char **argv)
 					}
 
 					if(onlypreprocess) {
+#ifdef _WIN32
 						strcat_s(name, 260, ".preprocessed.ssl");
+#else
+						strncat(name, ".preprocessed.ssl", 259 - strlen(name));
+#endif
 
 						if (strcmp(name, buf.name) == 0) {
 							c = strrchr(name, '.');
 							*c = 0;
 							*--c = 0;
+#ifdef _WIN32
 							strcat_s(name, 260, "1.preprocessed.ssl");
+#else
+							strncat(name, "1.preprocessed.ssl", 259 - strlen(name));
+#endif
 						}
 					} else {
+#ifdef _WIN32
 						strcat_s(name, 260, ".int");
+#else
+						strncat(name, ".int", 259 - strlen(name));
+#endif
 
 						if (strcmp(name, buf.name) == 0) {
 							c = strrchr(name, '.');
 							*c = 0;
 							*--c = 0;
+#ifdef _WIN32
 							strcat_s(name, 260, "1.int");
+#else
+							strncat(name, "1.int", 259 - strlen(name));
+#endif
 						}
 					}
 				}
@@ -218,17 +293,27 @@ int main(int argc, char **argv)
 					FILE *newfile;
 					unsigned int letters;
 					char tmpbuf[260];
+#ifdef _WIN32
 					rand_s(&letters);
+#else
+					letters = arc4random();
+#endif
 					if(onlypreprocess) {
+#ifdef _WIN32
 						strcpy_s(tmpbuf, 260, name);
+#else
+						strncpy(tmpbuf, name, 259);
+						tmpbuf[259] = '\0';
+#endif
 						newfile=fopen(tmpbuf, "w+");
 					} else {
+#ifdef _WIN32
 						sprintf(tmpbuf, "%d_%8x.tmp", GetCurrentProcessId(), letters);
-//#if _DEBUG
-//						newfile=fopen(tmpbuf, "w+");
-//#else
 						newfile=fopen(tmpbuf, "w+DT");
-//#endif
+#else
+						sprintf(tmpbuf, "%d_%8x.tmp", getpid(), letters);
+						newfile=fopen(tmpbuf, "w+");
+#endif
 					}
 					if(mcpp_lib_main(foo.file, newfile, buf.name, buf.name, defMacro, includeDir)) {
 						parseOutput("*** An error occured during preprocessing of %s ***\n", buf.name);
@@ -288,9 +373,15 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 	foo.name=AddFileName(origPath);
 	foo.file = fopen(filePath, "r");
 
+#ifdef _WIN32
 	rand_s(&letters);
 	sprintf(tmpbuf, "%d_%8x.tmp", GetCurrentProcessId(), letters);
 	newfile=fopen(tmpbuf, "w+DT");
+#else
+	letters = arc4random();
+	sprintf(tmpbuf, "%d_%8x.tmp", getpid(), letters);
+	newfile=fopen(tmpbuf, "w+");
+#endif
 	//newfile=fopen(tmpbuf, "w+");
 	parseroutput = fopen("errors.txt", "w");
 	//GetCurrentDirectoryA(1024, cwd);

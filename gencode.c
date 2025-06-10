@@ -3,6 +3,13 @@
 #include <string.h>
 #include <stdarg.h>
 #include <setjmp.h>
+#include <stdint.h>
+#ifdef _WIN32
+// Windows has _stricmp
+#else
+#include <strings.h>
+#define _stricmp strcasecmp
+#endif
 
 #include "parse.h"
 #include "parselib.h"
@@ -52,24 +59,24 @@ static void writeWord(unsigned short a, FILE *f) {
 	writeByte((unsigned char)(a & 0x00ff), f);
 }
 
-static void writeLong(unsigned long a, FILE *f) {
+static void writeLong(uint32_t a, FILE *f) {
 	writeWord((unsigned short)(a >> 16), f);
 	writeWord((unsigned short)(a & 0x0000ffff), f);
 }
 
 void writeInt(unsigned long a, FILE *f) {
 	writeWord(O_INTOP, f);
-	writeLong(a, f);
+	writeLong((uint32_t)a, f);
 }
 
 void writeFloat(float a, FILE *f) {
 	writeWord(O_FLOATOP, f);
-	writeLong(*(unsigned long *)&a, f);
+	writeLong(*(uint32_t *)&a, f);
 }
 
 void writeString(unsigned long a, FILE *f) {
 	writeWord(O_STRINGOP, f);
-	writeLong(a, f);
+	writeLong((uint32_t)a, f);
 }
 
 void writeOp(unsigned short op, FILE *f) {
@@ -83,7 +90,7 @@ static void writeMemory(unsigned char *p, int len, FILE *f) {
 static void writenamelist(FILE *f, char *namelist) {
 	if (namelist) {
 		int len;
-		writeLong(*(unsigned long *)namelist, f);
+		writeLong(*(uint32_t *)namelist, f);
 		namelist += 4;
 		while((len = *(unsigned short *)namelist) != 0xffff) {
 			writeWord((unsigned short)len, f);
@@ -140,25 +147,25 @@ static void writeProcAddress(NodeList *n, int i, FILE *f) {
 static void writeProcedureTable(FILE *f, ProcedureList *p) {
 	int i;
 
-	writeLong(p->numProcedures, f);    // write size of table in elements
+	writeLong((uint32_t)p->numProcedures, f);    // write size of table in elements
 	for (i=0; i < p->numProcedures; ++i) {
-		writeLong(p->procedures[i].name, f);
-		writeLong(p->procedures[i].type, f);
+		writeLong((uint32_t)p->procedures[i].name, f);
+		writeLong((uint32_t)p->procedures[i].type, f);
 		if (p->procedures[i].type & P_TIMED)
-			writeLong(p->procedures[i].time, f);
+			writeLong((uint32_t)p->procedures[i].time, f);
 		else
 			writeLong(0, f);
 
 		writeLong(0, f);     // expression offset
 		writeLong(0, f);     // position of this procedure
-		writeLong(p->procedures[i].numArgs, f);
+		writeLong((uint32_t)p->procedures[i].numArgs, f);
 	}
 }
 
 static void patchOffset(int where, int with, FILE *f) {
 	int here = outputTell(f);
 	outputSeek(f, where, SEEK_SET);
-	writeLong(with, f);
+	writeLong((uint32_t)with, f);
 	outputSeek(f, here, SEEK_SET);
 }
 
@@ -867,7 +874,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 	return i+1;
 }
 
-static int writeBlock(NodeList *n, int i, FILE *f) {
+int writeBlock(NodeList *n, int i, FILE *f) {
 	if (n->nodes[i].token != T_BEGIN)
 		parseError("begin expected");
 
@@ -930,7 +937,11 @@ static void writeProcedures(Program *prog, int tableOffset, FILE *f) {
 	ProcedureList *p = &prog->procedures;
 
 	for (i=0; i<p->numProcedures; ++i) {
+#ifdef _WIN32
 		if (_stricmp(getName(p->procedures[i].name, prog->namelist), "start") == 0) {
+#else
+		if (strcasecmp(getName(p->procedures[i].name, prog->namelist), "start") == 0) {
+#endif
 			if (p->procedures[i].type & P_IMPORT)
 				parseError("Procedure 'start' cannot be imported");
 
