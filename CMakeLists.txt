@@ -55,7 +55,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sMODULARIZE=1")
 
-  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORT_ES6=0")
+  target_link_options(${EXECUTABLE_NAME} PRIVATE "-sEXPORT_ES6=1")
 
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sENVIRONMENT=node")
 
