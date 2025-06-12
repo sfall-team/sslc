@@ -68,6 +68,24 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 
   target_link_options(${EXECUTABLE_NAME} PRIVATE "-sSTACK_SIZE=2048000")
 
+  # Next commands replaces import.meta.url with __filename in sslc.mjs
+  # This is done to support importing in VScode-BGforge-MLS
+  set(patch_script "${CMAKE_BINARY_DIR}/patch_sslc.cmake")
+  file(WRITE "${patch_script}" "
+      if(EXISTS \"${CMAKE_CURRENT_BINARY_DIR}/bin/sslc.mjs\")
+          file(READ \"${CMAKE_CURRENT_BINARY_DIR}/bin/sslc.mjs\" file_content)
+          string(REPLACE \"import.meta.url\" \"__filename\" file_content \"\${file_content}\")
+          file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/bin/sslc.__filename.mjs\" \"\${file_content}\")
+          message(STATUS \"Patched sslc.mjs\")
+      else()
+          message(FATAL_ERROR \"sslc.mjs does not exist!\")
+      endif()
+  ")
+  add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -P "${patch_script}"
+    COMMENT "Applying patch to sslc.mjs"
+  )
+
   set(PACKAGE_JSON_CONTENT [[
   {
     "name": "sslc-emscripten-nodefs",
