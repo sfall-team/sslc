@@ -1,0 +1,357 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  setup_rpu_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Cache RPU & modderspack
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        uses: actions/cache@v4
+        with:
+          path: test/gamescripts
+          key: rpu-and-modderpack-gamescripts-v1004
+
+      - name: Download RPU scripts & modderspack
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        shell: bash
+        run: |
+          (cd test && bash test_on_fallout2_rpu_setup.bash)
+  
+  build_windows:
+    runs-on: windows-2025
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Visual Studio 2019 Build Tools with v141_xp
+        shell: cmd
+        run: |
+          choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
+
+      - name: Patch vcxproj to use v141_xp toolset
+        run: sed -i 's|<PlatformToolset>v100</PlatformToolset>|<PlatformToolset>v141_xp</PlatformToolset>|g' sslc.vcxproj
+
+      - name: Patch vcxproj to link debug build statically
+        run: sed -i 's|MultiThreadedDebugDLL|MultiThreadedDebug|g' sslc.vcxproj
+
+      - name: List Visual Studio directories
+        shell: cmd
+        run: |
+          dir "C:\Program Files (x86)\Microsoft Visual Studio" /s /b
+
+      - name: Build Debug
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
+
+      - name: Test
+        shell: bash
+        run: |
+          export SSLC=../Debug/sslc.exe
+          (cd test && bash ./tests.bash)
+
+      - name: Upload Debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-debug
+          path: |
+            **/Debug/*.exe
+
+      # - name: Build Debug for Fallout1
+      #   run: msbuild sslc.vcxproj "/t:Clean;Build" /p:Configuration="Debug (for Fallout1)" /p:Platform="Win32" /m
+
+      # - name: Upload Debug for Fallout1
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-Debug-for-Fallout1
+      #     path: |
+      #       **/Debug*/*.exe
+
+      - name: Mkdir
+        run: mkdir -p Build
+
+      - name: Build Release
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release" /p:Platform="Win32" /m
+
+      - name: Test
+        shell: bash
+        run: |
+          export SSLC=../Build/compile.exe
+          (cd test && bash ./tests.bash)
+
+      - name: Cache RPU & modderspack (separate cache for Windows)
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        uses: actions/cache@v4
+        with:
+          path: test/gamescripts
+          key: rpu-and-modderpack-gamescripts-v1004
+      - name: Download RPU scripts & modderspack
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        shell: bash
+        run: |
+          (cd test && bash test_on_fallout2_rpu_setup.bash)
+  
+      - name: Test on Fallout RPU
+        shell: bash
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        run: |
+          export SSLC=../Build/compile.exe
+          (cd test && bash ./test_on_fallout2_rpu_run.bash)
+
+      - name: Upload Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            **/Build/*.exe
+
+      # - name: Build Release for Fallout1
+      #   run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (for Fallout1)" /p:Platform="Win32" /m
+
+      # - name: Upload Release for Fallout1
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-Release-for-Fallout1
+      #     path: |
+      #       **/Build/*.exe
+
+      - name: Build Release dll
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Release (dll)" /p:Platform="Win32" /m
+
+      - name: Upload Release dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-dll
+          path: |
+            **/Build/*.dll
+
+      # - name: Build Win2K
+      #   run: msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Win2K" /p:Platform="Win32" /m
+
+      # - name: Upload Win2K
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-Win2K
+      #     path: |
+      #       **/Win2K*/*.exe
+
+  build-wasm:
+    name: WebAssembly (WASI) Build
+    runs-on: ubuntu-22.04
+    needs: [setup_rpu_tests]    
+    defaults:
+      run:
+        shell: bash
+    if: false # Disable this job because WASI do not support setjmp/longjmp
+    env:
+      WASI_VERSION: "25"
+      WASI_VERSION_FULL: "25.0"
+      WASI_SDK_DIR: ${{ github.workspace }}/wasi-sdk
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download wasi-sdk
+        run: |
+          curl -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{env.WASI_VERSION}}/wasi-sdk-${{env.WASI_VERSION_FULL}}-x86_64-linux.tar.gz | tar xz
+          ls -lah
+          mv wasi-sdk-${{env.WASI_VERSION_FULL}}-x86_64-linux wasi-sdk
+
+      - name: Configure project
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=${{env.WASI_SDK_DIR}}/share/cmake/wasi-sdk.cmake \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build project
+        run: |
+          cd build
+          cmake --build .
+          find .
+
+      - name: Upload WebAssembly artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-wasi
+          path: |
+            build/**/*.wasm
+
+  build_emscripten:
+    name: Build webassembly version (Emscripten)
+    runs-on: ubuntu-latest
+    needs: [setup_rpu_tests]    
+    defaults:
+      run:
+        shell: bash
+    # container:
+    #  image: emscripten/emsdk:4.0.8
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build wasm module
+        run: |
+          docker run --rm --user $(id -u):$(id -g) \
+          -v $(pwd):/src emscripten/emsdk:4.0.8 \
+          sh -c 'mkdir -p build && cd build && emcmake cmake -DCMAKE_BUILD_TYPE="Release" ../ && emmake make'
+          
+          # mkdir -p build
+          # cd build
+          # emcmake cmake .. -DCMAKE_BUILD_TYPE="Release"
+          # emmake make
+
+      - name: Test
+        run: |
+          export SSLC=../build/bin/compiler.mjs
+          (cd test && bash ./tests.bash)
+
+
+      - name: Get cache RPU & modderspack
+        uses: actions/cache@v4
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        with:
+          path: test/gamescripts
+          key: rpu-and-modderpack-gamescripts-v1004
+          fail-on-cache-miss: true
+      - name: Test on Fallout RPU
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        run: |
+          export SSLC=../build/bin/compiler.mjs
+          (cd test && bash ./test_on_fallout2_rpu_run.bash)
+
+      - name: Upload .wasm artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-emscripten-node-nodefs
+          path: build/bin/**
+
+  build_linux:
+    name: Linux build
+    runs-on: ubuntu-22.04
+    needs: [setup_rpu_tests]    
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Dependencies (x86)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y build-essential g++-multilib libc6-dev:i386
+
+      - name: Configure & build
+        run: |
+          mkdir out
+          cd out
+          cmake ..
+          make
+
+      - name: Test
+        shell: bash
+        run: |
+          export SSLC=../out/bin/sslc
+          (cd test && bash ./tests.bash)
+
+      - name: Get cache RPU & modderspack
+        uses: actions/cache@v4
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        with:
+          path: test/gamescripts
+          key: rpu-and-modderpack-gamescripts-v1004
+          fail-on-cache-miss: true
+      - name: Test on Fallout RPU
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        run: |
+          export SSLC=../out/bin/sslc
+          (cd test && bash ./test_on_fallout2_rpu_run.bash)
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: out/bin/**
+          retention-days: 7
+
+  release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-22.04
+    needs: [build_windows, build_linux, build_emscripten]
+    permissions: write-all
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare artifacts
+        run: |
+          ls -laR
+
+          cd artifacts
+
+          mv wasm-emscripten-node-nodefs package
+          tar -czf wasm-emscripten-node-nodefs.tar.gz package
+          rm -rf package
+
+          ls -laR
+
+          mv windows-debug/Debug/sslc.exe sslc-debug.exe
+          rm -rf windows-debug
+
+          mv windows-release/Build/compile.exe compile.exe
+          rm -rf windows-release
+
+          mv windows-release-dll/Build/parser.dll parser.dll
+          rm -rf windows-release-dll
+
+          mv linux/sslc sslc-linux
+          rm -rf linux
+
+          ls -laR
+
+          if find . -mindepth 1 -maxdepth 1 -type d | grep -q .; then
+            echo "Directory contains subfolders."
+            exit 1
+          else
+            echo "No subfolders found."
+            exit 0
+          fi
+
+      - name: Generate timestamp tag
+        id: tag
+        run: echo "TAG_NAME=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
+          name: Build from ${{ steps.tag.outputs.TAG_NAME }}
+          files: artifacts/*
+          draft: false
+          prerelease: true

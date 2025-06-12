@@ -35,8 +35,8 @@
  * are placed here.
  */
 
-#include    "system.H"
-#include    "internal.H"
+#include    "system.h"
+#include    "internal.h"
 
 static int      do_if( int hash, const char * directive_name);
                 /* #if, #elif, #ifdef, #ifndef      */
