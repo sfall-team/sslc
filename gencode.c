@@ -662,9 +662,9 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			break;
 		}
 		case T_IF: {
-			int true, false, j;
+			int trueAddr, falseAddr, j;
 
-			false = outputTell(f);
+			falseAddr = outputTell(f);
 			writeInt(0, f);
 			j = i;
 			i = writeExpression(n, i+1, f);
@@ -682,11 +682,11 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			else i = writeStatement(n, i, f);
 
 			if (n->nodes[i].token == T_ELSE) {
-				true = outputTell(f);
+				trueAddr = outputTell(f);
 				writeInt(0, f);
 				writeOp(O_JMP, f);
 
-				patchOffset(false+OPCODE_SIZE, outputTell(f), f);
+				patchOffset(falseAddr+OPCODE_SIZE, outputTell(f), f);
 
 				i++;
 				if (n->nodes[i].token == T_BEGIN) {
@@ -696,19 +696,19 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 					i++;
 				}
 				else i = writeStatement(n, i, f);
-				patchOffset(true+OPCODE_SIZE, outputTell(f), f);
+				patchOffset(trueAddr+OPCODE_SIZE, outputTell(f), f);
 			}
 			else {
 				unsigned long a = outputTell(f);
-				patchOffset(false+OPCODE_SIZE, a, f);
+				patchOffset(falseAddr+OPCODE_SIZE, a, f);
 			}
 
 			break;
 		}
 		case T_WHILE: {
-			int false, top, j, pos;
+			int falseAddr, top, j, pos;
 
-			false = outputTell(f);
+			falseAddr = outputTell(f);
 			writeInt(0, f);
 			top = outputTell(f);
 			loopStack[++loopStackPos].startPos = top;
@@ -732,7 +732,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			writeOp(O_JMP, f);
 
 			pos = outputTell(f);
-			patchOffset(false+OPCODE_SIZE, pos, f);
+			patchOffset(falseAddr+OPCODE_SIZE, pos, f);
 
 			for (j = 0; j < loopStack[loopStackPos].numBreaks; j++) { // for each break, change it's JMP argument to proper address
 				patchOffset(breakStack[breakStackPos--] + OPCODE_SIZE, pos, f);
