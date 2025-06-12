@@ -1,8 +1,8 @@
 #ifndef _WIN32
-    
+
 #ifndef _COMPAT_H_DEFINED
-#define _COMPAT_H_DEFINED    
-        
+#define _COMPAT_H_DEFINED
+
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -26,12 +26,12 @@
 #define _A_NORMAL 0x00
 #define _A_SUBDIR 0x10
 
-#define _MSC_VER 
+#define _MSC_VER
 
 
 int sprintf_s(char *buffer, size_t sizeOfBuffer, const char *format, ...);
 int rand_s(unsigned int *randomValue);
-        
+
 int strcpy_s(char* dest, size_t destsz, const char* src);
 int strcat_s(char *dest, size_t destsz, const char *src);
 
@@ -51,16 +51,16 @@ typedef u_int32_t _fsize_t;
 
 
 struct _finddata_t {
-    unsigned attrib;
-    time_t time_write;
-    size_t size;
-    char name[PATH_MAX];
+	unsigned attrib;
+	time_t time_write;
+	size_t size;
+	char name[PATH_MAX];
 };
 
 typedef struct {
-    DIR *dir;
-    char pattern[PATH_MAX];
-    char path[PATH_MAX];
+	DIR *dir;
+	char pattern[PATH_MAX];
+	char path[PATH_MAX];
 } _find_handle_t;
 
 

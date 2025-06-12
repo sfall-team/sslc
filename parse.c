@@ -63,7 +63,6 @@ static void freeVariableList(VariableList *v);
 static void freeVariable(Variable *v);
 static void parseWhile(Procedure *p, NodeList *n);
 static int variable(VariableList *v, char **names, int type, char allowArrays, int allowMulti);
-extern int writeBlock(NodeList *n, int i, FILE *f);
 
 extern FILE* parseroutput;
 

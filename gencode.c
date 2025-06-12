@@ -871,7 +871,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 	return i+1;
 }
 
-extern int writeBlock(NodeList *n, int i, FILE *f) {
+int writeBlock(NodeList *n, int i, FILE *f) {
 	if (n->nodes[i].token != T_BEGIN)
 		parseError("begin expected");
 

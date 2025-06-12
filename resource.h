@@ -9,7 +9,7 @@
 #define VERSION_BUILD 4
 #define VERSION_REV 0
 
-#define VERSION_STRING "4.4.5"
+#define VERSION_STRING "4.4.7"
 
 #ifdef BUILDING_DLL
 #define FILE_STRING "parser.dll"

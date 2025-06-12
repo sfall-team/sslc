@@ -52,10 +52,10 @@
 #define S_ISREG( mode)  (mode & S_IFREG)
 #define S_ISDIR( mode)  (mode & S_IFDIR)
 #endif
-#if ! defined (S_IFREG)
+#if     ! defined( S_IFREG)
 #define S_IFREG     _S_IFREG
 #endif
-#if ! defined (S_IFDIR)
+#if     ! defined( S_IFDIR)
 #define S_IFDIR     _S_IFDIR
 #endif
 

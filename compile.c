@@ -65,9 +65,12 @@ int main(int argc, char **argv)
 	char name[260], *c, *file;
 	struct FINDDATA buf;
 	FINDHANDLE handle;
-	int nologo=0;
-	int preprocess=0;
-	int onlypreprocess=0;
+	int nologo = 0;
+	int preprocess = 0;
+	int onlypreprocess = 0;
+#ifndef WIN2K
+	char tmp_file_name[260] = {0};
+#endif
 
 	char* includeDir = NULL, *defMacro = NULL;
 
@@ -98,7 +101,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	while((argv[1] != NULL) && (argv[1][0] == '-')) {
+	while ((argv[1] != NULL) && (argv[1][0] == '-')) {
 		switch(argv[1][1]) {
 		case 'w':
 		case '-':
@@ -158,19 +161,19 @@ int main(int argc, char **argv)
 		argc--;
 	}
 	// disabled - Fakels
-	/*if(backwardcompat&&(optimize||preprocess)) {
+	/*if (backwardcompat&&(optimize||preprocess)) {
 		parseOutput("Invalid option combination; cannot run preprocess or optimization passes in backward compatibility mode\n");
 		return -1;
 	}*/
 
-	if(!nologo) PrintLogo();
+	if (!nologo) PrintLogo();
 
 	compilerErrorTotal = 0;
 #ifndef WIN2K
 	if (defMacro) parseOutput("Define macro: %s\n", defMacro);
 	if (includeDir) parseOutput("Set include directory: %s\n", includeDir);
 #endif
-	while(argv[1]) {
+	while (argv[1]) {
 		file = argv[1];
 		argv++;
 		argc--;
@@ -186,9 +189,9 @@ int main(int argc, char **argv)
 
 				parseOutput("Compiling %s\n", buf.name);
 
-				if(argc>=2&&!strcmp(argv[1], "-o")) {
-					argv+=2;
-					argc-=2;
+				if (argc >= 2 && !strcmp(argv[1], "-o")) {
+					argv += 2;
+					argc -= 2;
 					strcpy_s(name, 260, argv[0]);
 				} else {
 					strcpy_s(name, 260, buf.name);
@@ -198,7 +201,7 @@ int main(int argc, char **argv)
 						*c = 0;
 					}
 
-					if(onlypreprocess) {
+					if (onlypreprocess) {
 						strcat_s(name, 260, ".preprocessed.ssl");
 
 						if (strcmp(name, buf.name) == 0) {
@@ -219,37 +222,36 @@ int main(int argc, char **argv)
 					}
 				}
 #ifndef WIN2K
-				char tmp_file_name[260] = {0};
-				if(preprocess) {
+				if (preprocess) {
 					FILE *newfile;
 					unsigned int letters;
 
 					rand_s(&letters);
-					if(onlypreprocess) {
+					if (onlypreprocess) {
 						strcpy_s(tmp_file_name, 260, name);
-						newfile=fopen(tmp_file_name, "w+");
+						newfile = fopen(tmp_file_name, "w+");
 					} else {
 						sprintf(tmp_file_name, "%d_%8x.tmp", GetCurrentProcessId(), letters);
 //#if _DEBUG
-//						newfile=fopen(tmp_file_name, "w+");
+//						newfile = fopen(tmp_file_name, "w+");
 //#else
 #ifdef WIN32
-						newfile=fopen(tmp_file_name, "w+DT");
+						newfile = fopen(tmp_file_name, "w+DT");
 #else
-						newfile=fopen(tmp_file_name, "w+");
+						newfile = fopen(tmp_file_name, "w+");
 #endif
 //#endif
 					}
-					if(mcpp_lib_main(foo.file, newfile, buf.name, buf.name, defMacro, includeDir)) {
+					if (mcpp_lib_main(foo.file, newfile, buf.name, buf.name, defMacro, includeDir)) {
 						parseOutput("*** An error occured during preprocessing of %s ***\n", buf.name);
 						return 1;
 					}
 					fclose(foo.file);
 					rewind(newfile);
-					foo.file=newfile;
+					foo.file = newfile;
 				}
 #endif
-				if(!onlypreprocess) {
+				if (!onlypreprocess) {
 					parse(&foo, name);
 					freeCurrentProgram();
 				}
@@ -280,7 +282,7 @@ int main(int argc, char **argv)
 
 #ifdef BUILDING_DLL
 
-static int inited=0;
+static int inited = 0;
 
 int _stdcall parse_main(const char *filePath, const char* origPath, const char* dir/*, const char* def, const char* include_dir, int backMode*/) {
 	InputStream foo;
@@ -289,7 +291,7 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 	FILE *newfile;
 	unsigned int letters;
 
-	if(inited) {
+	if (inited) {
 		freeCurrentProgram();
 		FreeFileNames();
 		inited=0;
@@ -300,13 +302,13 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 		lexClear();
 	}
 */
-	foo.name=AddFileName(origPath);
+	foo.name = AddFileName(origPath);
 	foo.file = fopen(filePath, "r");
 
 	rand_s(&letters);
 	sprintf(tmpbuf, "%d_%8x.tmp", GetCurrentProcessId(), letters);
-	newfile=fopen(tmpbuf, "w+DT");
-	//newfile=fopen(tmpbuf, "w+");
+	newfile = fopen(tmpbuf, "w+DT");
+	//newfile = fopen(tmpbuf, "w+");
 	parseroutput = fopen("errors.txt", "w");
 	//GetCurrentDirectoryA(1024, cwd);
 	//chdir(dir);
@@ -325,11 +327,11 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 	fclose(foo.file);
 	//fflush(newfile);
 	rewind(newfile);
-	foo.file=newfile;
+	foo.file = newfile;
 	parse(&foo, NULL);
 	fclose(foo.file);
 
-	inited=1;
+	inited = 1;
 	if (parseroutput)
 		fclose(parseroutput);
 

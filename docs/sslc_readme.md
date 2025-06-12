@@ -348,7 +348,7 @@ There are several changes in this version of sslc which may result in problems f
 
 ### Changelog
 
-**sfall 4.4.5:**
+**sfall 4.4.7:**
 - added Linux & WebAssembly builds
 
 **sfall 4.4.4:**
