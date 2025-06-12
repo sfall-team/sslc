@@ -348,6 +348,9 @@ There are several changes in this version of sslc which may result in problems f
 
 ### Changelog
 
+**sfall 4.5:**
+- fixed stack leftover from the `break` statement
+
 **sfall 4.4.7:**
 - added Linux & WebAssembly builds
 

@@ -28,14 +28,11 @@ static int startOffset;
 
 typedef struct {
 	int startPos;
-	int numBreaks;
 	int numContinue;
 } LoopInfo;
 
 LoopInfo loopStack[100]; // pointers to beginning of while loops
 int loopStackPos = 0;
-int breakStack[2048]; // pointers to arguments to JMP (break statements)
-int breakStackPos = 0;
 int continueStack[2048]; // pointers to arguments to JMP (continue statements)
 int continueStackPos = 0;
 
@@ -712,7 +709,6 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			writeInt(0, f);
 			top = outputTell(f);
 			loopStack[++loopStackPos].startPos = top;
-			loopStack[loopStackPos].numBreaks = 0;
 			loopStack[loopStackPos].numContinue = 0;
 			i = writeExpression(n, i+1, f);
 			writeOp(O_WHILE, f);
@@ -734,9 +730,6 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			pos = outputTell(f);
 			patchOffset(falseAddr+OPCODE_SIZE, pos, f);
 
-			for (j = 0; j < loopStack[loopStackPos].numBreaks; j++) { // for each break, change it's JMP argument to proper address
-				patchOffset(breakStack[breakStackPos--] + OPCODE_SIZE, pos, f);
-			}
 			continueStackPos -= loopStack[loopStackPos].numContinue; // remove all "continue" pointers found in current loop from the stack,
 																     // this will only apply to "WHILE" loops
 			loopStackPos--;
@@ -849,9 +842,10 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 			i++;
 			break;
 		case T_BREAK:
-			loopStack[loopStackPos].numBreaks++;
-			breakStack[++breakStackPos] = outputTell(f); // address will be patched to point to exit from loop
-			writeInt(0, f);
+			// "break" statement is only allowed inside for/foreach/while loops.
+			// All of them are implemented using O_WHILE which requires stack
+			// to have an address where to jump when condition is false.
+			// So we just using this address to jump to the end of loop.
 			writeOp(O_JMP, f);
 			i++;
 			break;
