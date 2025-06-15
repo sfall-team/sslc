@@ -244,6 +244,11 @@ int main(int argc, char **argv)
 					}
 					if (mcpp_lib_main(foo.file, newfile, buf.name, buf.name, defMacro, includeDir)) {
 						parseOutput("*** An error occured during preprocessing of %s ***\n", buf.name);
+#ifndef WIN32
+						if (strlen(tmp_file_name) > 0) {
+							remove(tmp_file_name);
+						}
+#endif
 						return 1;
 					}
 					fclose(foo.file);
