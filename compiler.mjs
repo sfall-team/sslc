@@ -34,26 +34,9 @@ async function compile(sslcArgs, wasmBinary, cwd) {
         : {}),
     });
 
-    instance.FS.mkdir("/host");
-
     const cwdPath = path.parse(cwd || process.cwd());
 
-    // console.info("DEBUG cwd", cwd);
-
-    instance.FS.mount(
-      // Using NODEFS instead of NODERAWFS because
-      // NODERAWFS caused errors when the same module
-      // runs the second time
-      instance.NODEFS,
-      {
-        root: cwdPath.root,
-      },
-      "/host"
-    );
-
-    // console.info("DEBUG after mount");
-
-    instance.FS.chdir(path.join("host", cwdPath.dir, cwdPath.name));
+    instance.FS.chdir(path.join(cwdPath.dir, cwdPath.name));
 
     // console.info("DEBUG after chdir");
 
@@ -62,7 +45,6 @@ async function compile(sslcArgs, wasmBinary, cwd) {
     // console.info("DEBUG after call");
 
     instance.FS.chdir("/");
-    instance.FS.unmount("/host");
 
     return {
       returnCode,
