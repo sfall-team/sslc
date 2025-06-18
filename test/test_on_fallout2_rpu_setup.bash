@@ -65,9 +65,12 @@ fi
 
 cd Fallout2_Restoration_Project/scripts_src
   if [ ! -L 'sfall' ] && [ ! -d 'sfall' ]; then
-    # ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
-    echo "== Creating symlink to modderspack headers =="
-    ln -s ../../modderspack/scripting_docs/headers sfall
+
+    # echo "== Creating relative symlink to modderspack headers =="
+    # ln -s ../../modderspack/scripting_docs/headers sfall
+
+    echo "== Creating absolute symlink to modderspack headers =="
+    ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
   else
     echo "== Symlink to modderspack headers already exists =="
   fi
