@@ -175,6 +175,10 @@ run_tests() {
         set -e
         TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=STDOUT$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+      elif ls *.tmp 1> /dev/null 2>&1; then
+        echo "  > FAIL: Temporary files found, please check the test"
+        TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=TMPFILES$NEW_LINE"
+        TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
       else
         TESTS_SUCCESS_COUNT=$((TESTS_SUCCESS_COUNT + 1))
         echo "  > OK"
