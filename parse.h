@@ -26,13 +26,14 @@ typedef struct {
    };
 } Value;
 
-#ifdef BUILDING_DLL
-
 typedef struct {
 	int line;
 	const char* file;
 } Reference;
 
+// TODO: 64bit support for Windows DLL
+#ifdef BUILDING_DLL
+_Static_assert(sizeof(Reference) == 8, "Reference struct size changed - ABI break");
 #endif
 
 #define V_LOCAL    1
@@ -41,7 +42,7 @@ typedef struct {
 #define V_EXPORT   4
 typedef struct {
    int name;   /* offset into program or procedure's namelist */
-   int* references;
+   Reference* references;
    int numRefs;
    Value value;
    int type;   // this type is where it was declared
@@ -89,7 +90,7 @@ typedef struct {
    int numArgs;
    int defined;
    VariableList variables;
-   int* references;
+   Reference* references;
    int numRefs;
    int uses;
    int declared;

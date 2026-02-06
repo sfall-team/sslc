@@ -1120,7 +1120,7 @@ static void GetNamelistData(char* namelist, int* outEntries, char** outEndptr, i
 	//first find the offsets
 	list = namelist + 4;
 	for (i = 0; i < entries; i++) {
-		offsets[i] = 2 + (unsigned int)list - (unsigned int)namelist;
+		offsets[i] = 2 + (int)(list - namelist);
 		list += *(unsigned short*)list + 2;
 	}
 	memcpy(transforms, offsets, entries * 4);

@@ -43,7 +43,7 @@ int strcat_s(char *dest, size_t destsz, const char *src);
 #define _stat stat
 
 
-#if !defined(__EMSCRIPTEN__)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__)
 typedef __time_t time_t;
 #endif
 
