@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <setjmp.h>
+#include <stdint.h>
 
 #include "parse.h"
 #include "parselib.h"
@@ -53,22 +54,22 @@ static void writeWord(unsigned short a, FILE *f) {
 	writeByte((unsigned char)(a & 0x00ff), f);
 }
 
-static void writeLong(unsigned long a, FILE *f) {
+static void writeLong(uint32_t a, FILE *f) {
 	writeWord((unsigned short)(a >> 16), f);
 	writeWord((unsigned short)(a & 0x0000ffff), f);
 }
 
-void writeInt(unsigned long a, FILE *f) {
+void writeInt(uint32_t a, FILE *f) {
 	writeWord(O_INTOP, f);
 	writeLong(a, f);
 }
 
 void writeFloat(float a, FILE *f) {
 	writeWord(O_FLOATOP, f);
-	writeLong(*(unsigned long *)&a, f);
+	writeLong(*(uint32_t *)&a, f);
 }
 
-void writeString(unsigned long a, FILE *f) {
+void writeString(uint32_t a, FILE *f) {
 	writeWord(O_STRINGOP, f);
 	writeLong(a, f);
 }
@@ -84,7 +85,7 @@ static void writeMemory(unsigned char *p, int len, FILE *f) {
 static void writenamelist(FILE *f, char *namelist) {
 	if (namelist) {
 		int len;
-		writeLong(*(unsigned long *)namelist, f);
+		writeLong(*(unsigned int *)namelist, f);
 		namelist += 4;
 		while((len = *(unsigned short *)namelist) != 0xffff) {
 			writeWord((unsigned short)len, f);
@@ -696,7 +697,7 @@ static int writeStatement(NodeList *n, int i, FILE *f) {
 				patchOffset(trueAddr+OPCODE_SIZE, outputTell(f), f);
 			}
 			else {
-				unsigned long a = outputTell(f);
+				int a = outputTell(f);
 				patchOffset(falseAddr+OPCODE_SIZE, a, f);
 			}
 

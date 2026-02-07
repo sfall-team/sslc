@@ -4,8 +4,15 @@ set(EXECUTABLE_NAME sslc)
 
 project(${EXECUTABLE_NAME})
 
-# Set 32-bit flag for all targets because it segfaults on 64-bit
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+option(FORCE_32BIT "Force 32-bit build" ON)
+
+if(FORCE_32BIT AND APPLE)
+  message(FATAL_ERROR "Unable to compile 32-bit on Apple")
+endif()
+
+if(FORCE_32BIT)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 

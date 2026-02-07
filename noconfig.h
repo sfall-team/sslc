@@ -174,7 +174,11 @@
 #endif
 
 #ifndef HOST_HAVE_STPCPY
+#if defined(__APPLE__)
+#define HOST_HAVE_STPCPY            TRUE
+#else
 #define HOST_HAVE_STPCPY            FALSE
+#endif
 #endif
 
 /*

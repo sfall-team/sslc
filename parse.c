@@ -315,7 +315,7 @@ char *getName(int offset, char *namelist) {
 */
 static int addName(char **namelist, char *name) {
 	unsigned short slen = strlen(name);
-	long tlen;
+	unsigned int tlen;
 	char *n = *namelist;
 	char *c;
 	int odd = 0;
@@ -328,13 +328,13 @@ static int addName(char **namelist, char *name) {
 
 	if (!n) {
 		n = (char*)malloc(4 + 2 + slen + 2);
-		*(long *)n = 2 + slen;
+		*(unsigned int *)n = 2 + slen;
 		c = n + 4;
 	}
 	else {
 		int i;
 
-		tlen = *(long *)n;
+		tlen = *(unsigned int *)n;
 		i = findName(n, name);
 		if (i != -1)
 			return i;
@@ -346,7 +346,7 @@ static int addName(char **namelist, char *name) {
 		2 for ending length
 		*/
 		n = (char*)realloc(n, 4 + tlen + 2 + slen + 2);
-		*(long *)n = tlen + 2 + slen;
+		*(unsigned int *)n = tlen + 2 + slen;
 		c = n + 4 + tlen;
 	}
 	*(unsigned short *)c = slen;
@@ -359,7 +359,7 @@ static int addName(char **namelist, char *name) {
 
 static int addString(char **namelist, char *name) {
 	unsigned short slen = strlen(name);
-	long tlen;
+	unsigned int tlen;
 	char *n = *namelist;
 	char *c;
 	int odd = 0;
@@ -372,13 +372,13 @@ static int addString(char **namelist, char *name) {
 
 	if (!n) {
 		n = (char*)malloc(4 + 2 + slen + 2);
-		*(long *)n = 2 + slen;
+		*(unsigned int *)n = 2 + slen;
 		c = n + 4;
 	}
 	else {
 		int i;
 
-		tlen = *(long *)n;
+		tlen = *(unsigned int *)n;
 		i = findString(n, name);
 		if (i != -1)
 			return i;
@@ -390,7 +390,7 @@ static int addString(char **namelist, char *name) {
 		2 for ending length
 		*/
 		n = (char*)realloc(n, 4 + tlen + 2 + slen + 2);
-		*(long *)n = tlen + 2 + slen;
+		*(unsigned int *)n = tlen + 2 + slen;
 		c = n + 4 + tlen;
 	}
 	*(unsigned short *)c = slen;
@@ -475,19 +475,19 @@ static void assignVariable(VariableList *v, int which, LexData *what) {
 	v->variables[which].initialized = 1;
 }
 
-static void reference(int* numrefs, int** refs) {
+static void reference(int* numrefs, Reference** refs) {
 	if (!*refs) {
-		*refs = (int*)malloc(8 * 8);
+		*refs = (Reference*)malloc(8 * sizeof(Reference));
 //#ifndef BUILDING_DLL // Fakels: fixes list of references for sfall Script Editor Ext
-	} else if (refs[0][numrefs[0] * 2 - 2] == lexGetLineno(currentInputStream) && refs[0][numrefs[0] * 2 - 1] == (int)lexGetFilename(currentInputStream)) {
+	} else if ((*refs)[*numrefs - 1].line == lexGetLineno(currentInputStream) && (*refs)[*numrefs - 1].file == lexGetFilename(currentInputStream)) {
 		return;
 //#endif
-	} else if (!(numrefs[0] % 8)) {
-		*refs = (int*)realloc(*refs, (numrefs[0] + 9) * 8);
+	} else if (!(*numrefs % 8)) {
+		*refs = (Reference*)realloc(*refs, (*numrefs + 9) * sizeof(Reference));
 	}
-	refs[0][numrefs[0] * 2] = lexGetLineno(currentInputStream);
-	refs[0][numrefs[0] * 2 + 1] = (int)lexGetFilename(currentInputStream);
-	numrefs[0]++;
+	(*refs)[*numrefs].line = lexGetLineno(currentInputStream);
+	(*refs)[*numrefs].file = lexGetFilename(currentInputStream);
+	(*numrefs)++;
 }
 
 static void referenceVariable(VariableList *v, int which) {
@@ -2076,7 +2076,7 @@ void _stdcall getStringspace(char* data) {
 	memcpy(data, currentProgram->stringspace + 4, size);
 }
 void _stdcall getProcRefs(int i, Reference* refs) {
-	memcpy(refs, currentProgram->procedures.procedures[i + 1].references, currentProgram->procedures.procedures[i + 1].numRefs * 8);
+	memcpy(refs, currentProgram->procedures.procedures[i + 1].references, currentProgram->procedures.procedures[i + 1].numRefs * sizeof(Reference));
 }
 void _stdcall getVarRefs(int i, Reference* refs) {
 	int numNormalVars = currentProgram->variables.numVariables;
@@ -2087,10 +2087,10 @@ void _stdcall getVarRefs(int i, Reference* refs) {
 	} else {
 		varlist = &currentProgram->variables;
 	}
-	memcpy(refs, varlist->variables[i].references, varlist->variables[i].numRefs * 8);
+	memcpy(refs, varlist->variables[i].references, varlist->variables[i].numRefs * sizeof(Reference));
 }
 void _stdcall getProcVarRefs(int i, int j, Reference* refs) {
-	memcpy(refs, currentProgram->procedures.procedures[i + 1].variables.variables[j].references, currentProgram->procedures.procedures[i + 1].variables.variables[j].numRefs * 8);
+	memcpy(refs, currentProgram->procedures.procedures[i + 1].variables.variables[j].references, currentProgram->procedures.procedures[i + 1].variables.variables[j].numRefs * sizeof(Reference));
 }
 
 

@@ -18,7 +18,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1004
+          key: rpu-and-modderpack-gamescripts-v1006
 
       - name: Download RPU scripts & modderspack
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
@@ -97,7 +97,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1004
+          key: rpu-and-modderpack-gamescripts-v1006
       - name: Download RPU scripts & modderspack
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         shell: bash
@@ -234,7 +234,7 @@ jobs:
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1004
+          key: rpu-and-modderpack-gamescripts-v1006
           fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
@@ -249,9 +249,18 @@ jobs:
           path: build/bin/**
 
   build_linux:
-    name: Linux build
+    name: Linux build (${{ matrix.arch }})
     runs-on: ubuntu-22.04
-    needs: [setup_rpu_tests]    
+    needs: [setup_rpu_tests]
+    strategy:
+      matrix:
+        include:
+          - arch: x86
+            cmake_flags: ""
+            artifact_name: linux-x86
+          - arch: x64
+            cmake_flags: "-DFORCE_32BIT=OFF"
+            artifact_name: linux-x64
     defaults:
       run:
         shell: bash
@@ -260,6 +269,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Dependencies (x86)
+        if: matrix.arch == 'x86'
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
@@ -269,7 +279,7 @@ jobs:
         run: |
           mkdir out
           cd out
-          cmake ..
+          cmake ${{ matrix.cmake_flags }} ..
           make
 
       - name: Test
@@ -283,7 +293,7 @@ jobs:
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
         with:
           path: test/gamescripts
-          key: rpu-and-modderpack-gamescripts-v1004
+          key: rpu-and-modderpack-gamescripts-v1006
           fail-on-cache-miss: true
       - name: Test on Fallout RPU
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
@@ -294,14 +304,58 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: linux
+          name: ${{ matrix.artifact_name }}
+          path: out/bin/**
+          retention-days: 7
+
+  build_macos:
+    name: macOS build (x64)
+    runs-on: macos-latest
+    needs: [setup_rpu_tests]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Configure & build
+        run: |
+          mkdir out
+          cd out
+          cmake -DFORCE_32BIT=OFF ..
+          make
+
+      - name: Test
+        shell: bash
+        run: |
+          export SSLC=../out/bin/sslc
+          (cd test && bash ./tests.bash)
+
+      - name: Get cache RPU & modderspack
+        uses: actions/cache@v4
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        with:
+          path: test/gamescripts
+          key: rpu-and-modderpack-gamescripts-v1006
+          fail-on-cache-miss: true
+      - name: Test on Fallout RPU
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-rpu-check')
+        run: |
+          export SSLC=../out/bin/sslc
+          (cd test && bash ./test_on_fallout2_rpu_run.bash)
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-x64
           path: out/bin/**
           retention-days: 7
 
   release:
     if: github.event_name == 'push'
     runs-on: ubuntu-22.04
-    needs: [build_windows, build_linux, build_emscripten]
+    needs: [build_windows, build_linux, build_macos, build_emscripten]
     permissions: write-all
     steps:
       - name: Download all artifacts
@@ -330,8 +384,14 @@ jobs:
           mv windows-release-dll/Build/parser.dll parser.dll
           rm -rf windows-release-dll
 
-          mv linux/sslc sslc-linux
-          rm -rf linux
+          mv linux-x86/sslc sslc-linux-x86
+          rm -rf linux-x86
+
+          mv linux-x64/sslc sslc-linux-x64
+          rm -rf linux-x64
+
+          mv macos-x64/sslc sslc-macos-x64
+          rm -rf macos-x64
 
           ls -laR
 

@@ -391,7 +391,7 @@ static int ConstantPropagateExpression(Node* nodes, Variable* vars, Value* value
 }
 
 static int* FindAssignmentsInBlock(const Node* nodes, const Variable* vars, int varCount) {
-	int* results = (int*)calloc(1, varCount * 4);
+	int* results = (int*)calloc(1, varCount * sizeof(int));
 	int statementdepth = 1, var;
 	assert(nodes->token == T_START_STATEMENT);
 	while (statementdepth) {
@@ -719,7 +719,7 @@ static void VariableReuse(NodeList* _nodes, VariableList* vars, int numArgs, Var
 static void DeadVariableRemoval(NodeList* _nodes, VariableList* vars, int numArgs) {
 	int i, var, j;
 	Node* nodes = _nodes->nodes;
-	int *uses = (int*)calloc(1, vars->numVariables * 4);
+	int *uses = (int*)calloc(1, vars->numVariables * sizeof(int));
 	for (i = 0; i < vars->numVariables; i++) uses[i] = 0;
 	for (i = 0; i < _nodes->numNodes; i++) {
 		if (nodes[i].token == T_SYMBOL && (var = LookupVariable(&nodes[i])) != -1) {
@@ -1114,16 +1114,16 @@ static void GetNamelistData(char* namelist, int* outEntries, char** outEndptr, i
 		list += *(unsigned short*)list + 2;
 	}
 	endptr = list + 2;
-	refs = (int*)calloc(1, entries * 4);
-	offsets = (int*)malloc(entries * 4);
-	transforms = (int*)malloc(entries * 4);
+	refs = (int*)calloc(1, entries * sizeof(int));
+	offsets = (int*)malloc(entries * sizeof(int));
+	transforms = (int*)malloc(entries * sizeof(int));
 	//first find the offsets
 	list = namelist + 4;
 	for (i = 0; i < entries; i++) {
-		offsets[i] = 2 + (unsigned int)list - (unsigned int)namelist;
+		offsets[i] = 2 + (int)(list - namelist);
 		list += *(unsigned short*)list + 2;
 	}
-	memcpy(transforms, offsets, entries * 4);
+	memcpy(transforms, offsets, entries * sizeof(int));
 
 	*outEntries = entries;
 	*outEndptr = endptr;
