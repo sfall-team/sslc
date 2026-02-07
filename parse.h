@@ -33,7 +33,7 @@ typedef struct {
 
 // TODO: 64bit support for Windows DLL
 #ifdef BUILDING_DLL
-_Static_assert(sizeof(Reference) == 8, "Reference struct size changed - ABI break");
+static_assert(sizeof(Reference) == 8, "Reference struct size changed - ABI break");
 #endif
 
 #define V_LOCAL    1
