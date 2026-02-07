@@ -52,7 +52,7 @@ if [ ! -d 'modderspack' ]; then
   fi
 
 
-  curl -L https://cyfuture.dl.sourceforge.net/project/sfall/Modders%20pack/modderspack_4.4.6.7z?viasf=1 > modderspack_4.4.6.7z
+  curl -L https://master.dl.sourceforge.net/project/sfall/Modders%20pack/modderspack_4.4.6.7z?viasf=1 > modderspack_4.4.6.7z
   7z x modderspack_4.4.6.7z -omodderspack
   
   echo "Done, removing \r"
