@@ -1,6 +1,14 @@
 set -e
 set -u
 
+sedi() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
 . utils.bash
 
 mkdir -p gamescripts
@@ -31,8 +39,8 @@ if [ ! -d 'Fallout2_Restoration_Project' ]; then
   fi
 
   echo "== Fallout2_Restoration_Project scripts removing \r =="
-  find . -type f -iname '*.ssl' -exec sed -i 's/\r$//' {} \;
-  find . -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
+  find . -type f -iname '*.ssl' -exec sh -c 'sed "s/\r$//" "$1" > "$1.tmp" && mv "$1.tmp" "$1"' _ {} \;
+  find . -type f -iname '*.h' -exec sh -c 'sed "s/\r$//" "$1" > "$1.tmp" && mv "$1.tmp" "$1"' _ {} \;
 
   echo "Done"
 else 
@@ -57,23 +65,14 @@ if [ ! -d 'modderspack' ]; then
   
   echo "Done, removing \r"
 
-  find modderspack -type f -iname '*.h' -exec sed -i 's/\r$//' {} \;
+  find modderspack -type f -iname '*.h' -exec sh -c 'sed "s/\r$//" "$1" > "$1.tmp" && mv "$1.tmp" "$1"' _ {} \;
   echo "Done"
 else 
   echo "== modderpack already downloaded =="
 fi
 
 cd Fallout2_Restoration_Project/scripts_src
-  if [ ! -L 'sfall' ] && [ ! -d 'sfall' ]; then
-
-    # echo "== Creating relative symlink to modderspack headers =="
-    # ln -s ../../modderspack/scripting_docs/headers sfall
-
-    echo "== Creating absolute symlink to modderspack headers =="
-    ln -s "$MODDERPACK_DIR/scripting_docs/headers" sfall
-  else
-    echo "== Symlink to modderspack headers already exists =="
-  fi
+sfall_symlink
 cd ../..
 
 

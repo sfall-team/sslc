@@ -17,5 +17,5 @@ MODDERPACK_DIR=$(pwd)/modderspack
 
 
 cd Fallout2_Restoration_Project/scripts_src
-
+sfall_symlink
 run_tests "$SSLC" "$MODDERPACK_DIR/scripting_docs/headers"

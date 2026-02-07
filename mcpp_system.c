@@ -1042,7 +1042,7 @@ static int  open_file(
 {
     char        dir_fname[ PATHMAX] = { EOS, };
     static int  max_open;
-    int         len;
+    size_t      len;
     FILEINFO *  file = infile;
     FILE *      fp;
     char *      fullname;
@@ -1088,7 +1088,7 @@ static int  open_file(
     } else if (fp == NULL)                  /* No read permission   */ 
         goto  _false;
     /* Truncate buffer of the includer to save memory   */
-    len = (int) (file->bptr - file->buffer);
+    len = file->bptr - file->buffer;
     if (len) {
         file->buffer = xrealloc( file->buffer, len + 1);
         file->bptr = file->buffer + len;

@@ -1,6 +1,22 @@
 set -e
 set -u
 
+sedi() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
+sfall_symlink() {
+  local target="../../modderspack/scripting_docs/headers"
+  if [ -L 'sfall' ]; then
+    [ "$(readlink sfall)" = "$target" ] || { rm -f sfall && ln -s "$target" sfall; }
+  elif [ ! -d 'sfall' ]; then
+    ln -s "$target" sfall
+  fi
+}
 
 SSLC_FLAGS="-q -p -l -O2 -d -s -n"
 
@@ -77,10 +93,10 @@ make_test_snapshots() {
       RETURN_CODE_EXPECTED=$?
       echo -n "$RETURN_CODE_EXPECTED" > "$FBASE.returncode.expected"
       set -e
-      sed -i 's/\r//g' $FBASE.stdout.expected
-      # sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
-      sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
-      sed -i 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
+      sedi 's/\r//g' $FBASE.stdout.expected
+      # sedi 's#[a-zA-Z0-9\/\:]*/test/gamescripts/Fallout2_Restoration_Project/scripts_src/#/scripts_src/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
+      sedi 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
+      sedi 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.expected" # On wine absolute paths can be different
 
       echo "  Done, return code $RETURN_CODE_EXPECTED"
 
@@ -132,6 +148,7 @@ run_tests() {
     OLD_PWD=$(pwd)
     echo "======================= $DIR/$FNAME ========================"
     cd "$DIR"
+    rm -f -- *.tmp
 
     # Expected build
     if [ ! -f "$FBASE.returncode.expected" ]; then
@@ -146,7 +163,7 @@ run_tests() {
         EXPECTED_SUCCESSFULL_COMPILED_FILES=$((EXPECTED_SUCCESSFULL_COMPILED_FILES + 1))
     fi
     # On Windows it might checkout files and automatically use CLRF line endings
-    sed -i 's/\r//g' "$FBASE.stdout.expected"
+    sedi 's/\r//g' "$FBASE.stdout.expected"
 
     # Obvserved build
     set +e
@@ -155,14 +172,19 @@ run_tests() {
       "$FNAME" -o "$FBASE.int.observed" > "$FBASE.stdout.observed"
     RETURN_CODE_OBSERVED=$?
     set -e
-    sed -i 's/\r//g' "$FBASE.stdout.observed"
-    sed -i 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
-    sed -i 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
+    sedi 's/\r//g' "$FBASE.stdout.observed"
+    sedi 's#[a-zA-Z0-9\/\:]*/test/gamescripts/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
+    sedi 's#[a-zA-Z0-9\/\:]*/test/embedded/#/#g' "$FBASE.stdout.observed" # On wine absolute paths can be different
 
     if [ "$RETURN_CODE_OBSERVED" -ne "$RETURN_CODE_EXPECTED" ]; then
         echo "  > FAIL: Return code mismatch, want $RETURN_CODE_EXPECTED got $RETURN_CODE_OBSERVED ==="
+        echo "  > Expected stdout:"
+        cat "$FBASE.stdout.expected"
+        echo "  > Observed stdout:"
+        cat "$FBASE.stdout.observed"
         TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=RETURNCODE$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+        rm -f -- *.tmp
     else
       if [ "$RETURN_CODE_EXPECTED" -eq 0 ] && ! diff "$FBASE.int.expected" "$FBASE.int.observed" ; then
         echo "  > FAIL: .INT files mismatch"
@@ -179,6 +201,7 @@ run_tests() {
         echo "  > FAIL: Temporary files found, please check the test"
         TEST_FAILED_FILES="$TEST_FAILED_FILES$DIR/$FNAME=TMPFILES$NEW_LINE"
         TESTS_FAILED_COUNT=$((TESTS_FAILED_COUNT + 1))
+        rm -f -- *.tmp
       else
         TESTS_SUCCESS_COUNT=$((TESTS_SUCCESS_COUNT + 1))
         echo "  > OK"

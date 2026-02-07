@@ -47,11 +47,11 @@ static int fileNameSize=0;
 static char **fileNames=0;
 const char *AddFileName(const char *c) {
 	if(fileNameSize==0) {
-		fileNames=(char**)malloc(8*4);
+		fileNames=(char**)malloc(8*sizeof(char*));
 		fileNameSize=8;
 	} else if(numFileNames==fileNameSize-1) {
 		fileNameSize+=8;
-		fileNames=(char**)realloc(fileNames, fileNameSize*4);
+		fileNames=(char**)realloc(fileNames, fileNameSize*sizeof(char*));
 	}
 	fileNames[numFileNames]=(char*)malloc(strlen(c)+1);
 	strcpy(fileNames[numFileNames], c);

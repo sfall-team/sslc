@@ -33,7 +33,7 @@ FILE *parseroutput;
 #define FINDFIRST(x, y) _findfirst(x, y)
 #define FINDNEXT(x, y) _findnext(x, y)
 #define FINDCLOSE(x, y) _findclose(x)
-#define FINDHANDLE long
+#define FINDHANDLE intptr_t
 //#define BAD_HANDLE -1
 
 #if defined(_MSC_VER)

@@ -1111,7 +1111,7 @@ int     get_ch( void)
  * Always return the value representable by unsigned char.
  */
 {
-    int             len;
+    size_t          len;
     int             c;
     FILEINFO *      file;
 
@@ -1186,7 +1186,7 @@ int     get_ch( void)
             infile->fp = fopen( cur_fullname, "r");
             fseek( infile->fp, infile->pos, SEEK_SET);
         }   /* Re-open the includer and restore the file-position   */
-        len = (int) (infile->bptr - infile->buffer);
+        len = infile->bptr - infile->buffer;
         infile->buffer = (char*)realloc( infile->buffer, NBUFF);
             /* Restore full size buffer to get the next line        */
         infile->bptr = infile->buffer + len;
