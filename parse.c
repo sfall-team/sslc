@@ -1126,10 +1126,10 @@ static void factor(Procedure *p, NodeList *nodes) {
 		}
 		break;
 	case '[':
-		parseArrayConstant(p, nodes);
+		parseArrayExpression(p, nodes);
 		break;
 	case '{':
-		parseAssocArrayConstant(p, nodes);
+		parseAssocArrayExpression(p, nodes);
 		break;
 	default:
 		parseLibExpression(p, nodes, i);

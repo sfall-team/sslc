@@ -10,6 +10,11 @@
 extern int loopNesting;
 extern Program *currentProgram;
 
+static int arrayExpressionNesting = 0;
+
+#define ARRAYFLAG_EXPR_PUSH (32) // is created as part of array sub-expression
+#define ARRAYFLAG_EXPR_POP  (64) // is used to indicate end of array sub-expression, not used in actual array
+
 // vars, constants, etc.
 void emitNodeExpr(Procedure *p, NodeList *n, LexData *data) {
 	emitOp(p, n, T_START_EXPRESSION);
@@ -413,14 +418,25 @@ void parseSwitch(Procedure *p, NodeList *n) {
 	if(expectToken(T_END)==-1) parseError("Expected end");
 }
 
-void parseAssocArrayConstant(Procedure *p, NodeList *n) {
+static void emitIntConstIntExpr(Procedure *p, NodeList *n, int i) {
+	emitOp(p, n, T_START_EXPRESSION);
+	emitInt(p, n, i);
+	emitOp(p, n, T_END_EXPRESSION);
+}
+
+static void emitSubExpressionTerminator(Procedure *p, NodeList *n) {
+	// Special temp_array call that will not actually create any array, but pop the internal expression stack for nested expressions to work properly
 	emitOp(p, n, T_TS_TEMP_ARRAY);
-	emitOp(p, n, T_START_EXPRESSION);
-	emitInt(p, n, -1);
-	emitOp(p, n, T_END_EXPRESSION);
-	emitOp(p, n, T_START_EXPRESSION);
-	emitInt(p, n, 0);
-	emitOp(p, n, T_END_EXPRESSION);
+	emitIntConstIntExpr(p, n, 0);
+	emitIntConstIntExpr(p, n, ARRAYFLAG_EXPR_POP);
+	emitOp(p, n, '+');
+}
+
+void parseAssocArrayExpression(Procedure *p, NodeList *n) {
+	arrayExpressionNesting++;
+	emitOp(p, n, T_TS_TEMP_ARRAY);
+	emitIntConstIntExpr(p, n, -1);
+	emitIntConstIntExpr(p, n, arrayExpressionNesting > 1 ? ARRAYFLAG_EXPR_PUSH : 0);
 	if (lex() != '}') {
 		ungetToken();
 		emitOp(p, n, T_TS_STACK_ARRAY);
@@ -440,31 +456,30 @@ void parseAssocArrayConstant(Procedure *p, NodeList *n) {
 			parseError("Mismatched '{}'");
 		}
 	}
-	return;
+	if (arrayExpressionNesting > 1) {
+		emitSubExpressionTerminator(p, n);
+	}
+	arrayExpressionNesting--;
 }
 
-void parseArrayConstant(Procedure *p, NodeList *n) {
+void parseArrayExpression(Procedure *p, NodeList *n) {
 	int i;
+	arrayExpressionNesting++;
+
 	emitOp(p, n, T_TS_TEMP_ARRAY);
-	for (i=0; i<2; i++) {
-		emitOp(p, n, T_START_EXPRESSION);
-		emitInt(p, n, 0);
-		emitOp(p, n, T_END_EXPRESSION);
-	}
+	emitIntConstIntExpr(p, n, 0); // size
+	emitIntConstIntExpr(p, n, arrayExpressionNesting > 1 ? ARRAYFLAG_EXPR_PUSH : 0);
+
 	if (lex() != ']') {
 		ungetToken();
 		emitOp(p, n, T_TS_STACK_ARRAY);
-		emitOp(p, n, T_START_EXPRESSION);
-		emitInt(p, n, 0);
-		emitOp(p, n, T_END_EXPRESSION);
+		emitIntConstIntExpr(p, n, 0); // first index
 		parseExpression(p, n);
 		emitOp(p, n, '+');
-		i=1;
+		i = 1;
 		while (lex() == ',') {
 			emitOp(p, n, T_TS_STACK_ARRAY);
-			emitOp(p, n, T_START_EXPRESSION);
-			emitInt(p, n, i);
-			emitOp(p, n, T_END_EXPRESSION);
+			emitIntConstIntExpr(p, n, i); // index
 			parseExpression(p, n);
 			emitOp(p, n, '+');
 			i++;
@@ -474,5 +489,8 @@ void parseArrayConstant(Procedure *p, NodeList *n) {
 			parseError("Mismatched '[]'");
 		}
 	}
-	return;
+	if (arrayExpressionNesting > 1) {
+		emitSubExpressionTerminator(p, n);
+	}
+	arrayExpressionNesting--;
 }
