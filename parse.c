@@ -28,7 +28,7 @@ extern int warnings;
 extern int optimize;
 extern int debug;
 extern int dumpTree;
-extern int shortCircuit;
+
 void optimizeTree(Program *program);
 
 /*

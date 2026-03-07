@@ -37,6 +37,7 @@ static void AppendToAssignCache() {
 }
 
 extern int backwardcompat;
+extern int shortCircuit;
 
 static int ungotToken = -1;
 static int lastToken = -1;
@@ -634,6 +635,38 @@ top:
 						stream->name=AddFileName(buf[which]);
 					}
 					else if (c == EOF)
+						ungetChar();
+				}
+			}
+			else if (_stricmp(buf[which], "pragma") == 0) { // pragma directives
+				do {
+					c = getChar();
+				} while(c != EOF && c != '\n' && !validSymbolChar(c));
+
+				if (c == EOF) {
+					ungetChar();
+				}
+				else if (validSymbolChar(c)) {
+
+					buf[which][0] = c;
+
+					i = 0;
+					while(1) {
+						c = getChar();
+
+						if (!validSymbolChar(c) && c != '-')
+							break;
+
+						buf[which][i+1] = c;
+						i++;
+					}
+
+					buf[which][i+1] = 0;
+
+					if (_stricmp(buf[which], "sce") == 0 && !shortCircuit) {
+						shortCircuit = 1;
+					}
+					if (c == EOF)
 						ungetChar();
 				}
 			}
