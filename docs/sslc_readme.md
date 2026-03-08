@@ -322,8 +322,8 @@ Syntax which requires sfall for compiled scripts to be interpreted is marked by 
   If you want to add additional condition for continuing the loop, use syntax: `foreach (<symbol> in <expression> while <expression>)`. In this case loop will iterate over elements of an array until last element or until "while" expression is true (whatever comes first).
 
   __NOTE:__ Just like `for` loop, `continue` statement will respect increments of a hidden counter variable, so you can safely use it inside `foreach`.
-  
-- `#pragma sce` directive. If present anywhere in the compiled script, will enable short-circuit evaluation of logical `and` and `or` operators, even if `-s` command line argument is not used.
+
+- `#pragma sce` directive. If present anywhere in the script source, it will enable short-circuit evaluation for all the logical `AND` and `OR` operators, even if the command line option `-s` is not used.
 
 ---
 
@@ -351,7 +351,7 @@ There are several changes in this version of sslc which may result in problems f
 ### Changelog
 
 **sfall 4.4.10:**
-- added #pragma sce
+- added `#pragma sce` directive
 
 **sfall 4.4.7:**
 - fixed leftover stack data caused by the `break` statement
