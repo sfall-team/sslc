@@ -13,7 +13,7 @@ void parseArrayAssignment(Procedure *p, NodeList *nodes, LexData symb);
 void parseFor(Procedure *p, NodeList *n);
 void parseForEach(Procedure *p, NodeList *n);
 void parseSwitch(Procedure *p, NodeList *n);
-void parseAssocArrayConstant(Procedure *p, NodeList *n);
-void parseArrayConstant(Procedure *p, NodeList *n);
+void parseAssocArrayExpression(Procedure *p, NodeList *n);
+void parseArrayExpression(Procedure *p, NodeList *n);
 
 #endif
