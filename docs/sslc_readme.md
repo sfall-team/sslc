@@ -350,8 +350,9 @@ There are several changes in this version of sslc which may result in problems f
 
 ### Changelog
 
-**sfall 4.4.10:**
+**sfall 4.5:**
 - added `#pragma sce` directive
+- added support for nested array expressions
 
 **sfall 4.4.7:**
 - fixed leftover stack data caused by the `break` statement
