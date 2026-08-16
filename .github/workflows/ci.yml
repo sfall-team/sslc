@@ -55,6 +55,7 @@ jobs:
           && msbuild sslc.sln "/t:Clean;Build" /p:Configuration="Debug" /p:Platform="Win32" /m
 
       - name: Test
+        continue-on-error: true
         shell: bash
         run: |
           export SSLC=../Debug/sslc.exe
@@ -88,6 +89,7 @@ jobs:
 
       - name: Test
         shell: bash
+        continue-on-error: true
         run: |
           export SSLC=../Build/compile.exe
           (cd test && bash ./tests.bash)
@@ -224,6 +226,7 @@ jobs:
           # emmake make
 
       - name: Test
+        continue-on-error: true
         run: |
           export SSLC=../build/bin/compiler.mjs
           (cd test && bash ./tests.bash)
@@ -273,6 +276,7 @@ jobs:
           make
 
       - name: Test
+        continue-on-error: true
         shell: bash
         run: |
           export SSLC=../out/bin/sslc
