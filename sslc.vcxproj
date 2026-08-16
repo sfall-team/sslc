@@ -144,6 +144,8 @@
       <AdditionalDependencies>kernel32.lib</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
+      <StackReserveSize>4194304</StackReserveSize>
+      <StackCommitSize>16384</StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -178,9 +180,11 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
+      <StackReserveSize>4194304</StackReserveSize>
+      <StackCommitSize>16384</StackCommitSize>
     </Link>
     <PostBuildEvent>
-      <Command>move "$(TargetPath)" "$(SolutionDir)Build\"</Command>
+      <Command>move /Y "$(TargetPath)" "$(SolutionDir)Build\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win2K|Win32'">
@@ -216,9 +220,11 @@
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <MinimumRequiredVersion>5.00</MinimumRequiredVersion>
+      <StackReserveSize>4194304</StackReserveSize>
+      <StackCommitSize>16384</StackCommitSize>
     </Link>
     <PostBuildEvent>
-      <Command>move "$(TargetPath)" "$(SolutionDir)Build2K\"</Command>
+      <Command>move /Y "$(TargetPath)" "$(SolutionDir)Build2K\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (dll)|Win32'">
@@ -252,9 +258,11 @@
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <StackReserveSize>4194304</StackReserveSize>
+      <StackCommitSize>16384</StackCommitSize>
     </Link>
     <PostBuildEvent>
-      <Command>move "$(TargetPath)" "$(SolutionDir)Build\"</Command>
+      <Command>move /Y "$(TargetPath)" "$(SolutionDir)Build\"</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <PreprocessorDefinitions>BUILDING_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -282,6 +290,8 @@
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <StackReserveSize>4194304</StackReserveSize>
+      <StackCommitSize>16384</StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (for Fallout1)|Win32'">
@@ -304,6 +314,8 @@
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <StackReserveSize>4194304</StackReserveSize>
+      <StackCommitSize>16384</StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
