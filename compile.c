@@ -289,7 +289,7 @@ int main(int argc, char **argv)
 
 static int inited = 0;
 
-int _stdcall parse_main(const char *filePath, const char* origPath, const char* dir/*, const char* def, const char* include_dir, int backMode*/) {
+int _stdcall parse_main(const char *filePath, const char* origPath, const char* dir, const char* def, const char* include_dir, int backMode) {
 	InputStream foo;
 	char tmpbuf[260];
 	//char cwd[1024];
@@ -301,12 +301,12 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 		FreeFileNames();
 		inited=0;
 	}
-/*
+
 	if (backMode) {
 		backwardcompat = 1;
 		lexClear();
 	}
-*/
+
 	foo.name = AddFileName(origPath);
 	foo.file = fopen(filePath, "r");
 
@@ -320,7 +320,7 @@ int _stdcall parse_main(const char *filePath, const char* origPath, const char* 
 	compilerErrorTotal = 0;
 	compilerSyntaxError = 0;
 	preprocess_fullpath = 1;
-	if (mcpp_lib_main(foo.file, newfile, origPath, dir, NULL, NULL)) { // prevent crash in old Script Editor - NR
+	if (mcpp_lib_main(foo.file, newfile, origPath, dir, def, include_dir)) {
 		fclose(foo.file);
 		fclose(newfile);
 		if (parseroutput)
