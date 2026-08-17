@@ -6,10 +6,10 @@
 
 #define VERSION_MAJOR 4
 #define VERSION_MINOR 5
-#define VERSION_BUILD 0
+#define VERSION_BUILD 1
 #define VERSION_REV 0
 
-#define VERSION_STRING "4.5"
+#define VERSION_STRING "4.5.1"
 
 #ifdef BUILDING_DLL
 #define FILE_STRING "parser.dll"

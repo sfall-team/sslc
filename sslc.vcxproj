@@ -220,8 +220,6 @@
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <MinimumRequiredVersion>5.00</MinimumRequiredVersion>
-      <StackReserveSize>4194304</StackReserveSize>
-      <StackCommitSize>16384</StackCommitSize>
     </Link>
     <PostBuildEvent>
       <Command>move /Y "$(TargetPath)" "$(SolutionDir)Build2K\"</Command>
