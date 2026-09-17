@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/types.h>
 #include <dirent.h>
 #include <fnmatch.h>
 #include <sys/stat.h>
@@ -44,7 +43,7 @@ int strcat_s(char *dest, size_t destsz, const char *src);
 
 
 #if !defined(__EMSCRIPTEN__)
-typedef __time_t time_t;
+//typedef __time_t time_t;
 #endif
 
 typedef u_int32_t _fsize_t;

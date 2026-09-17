@@ -2,10 +2,22 @@ cmake_minimum_required(VERSION 3.10)
 
 set(EXECUTABLE_NAME sslc)
 
-project(${EXECUTABLE_NAME})
+project(${EXECUTABLE_NAME} C)
 
-# Set 32-bit flag for all targets because it segfaults on 64-bit
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+# Option to build with musl libc for a portable, GLIBC-independent binary
+option(USE_MUSL "Build with musl libc (static, no GLIBC dependency)" OFF)
+
+if(USE_MUSL)
+  # Use the 32-bit musl cross-compiler
+  set(CMAKE_C_COMPILER i686-linux-musl-gcc)
+  # Static link against musl - no GLIBC dependency on the resulting binary
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+  # -m32 is implicit with i686 cross-compiler but set it explicitly for clarity
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+else()
+  # Set 32-bit flag for all targets because it segfaults on 64-bit
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -87,4 +99,3 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 
   file(COPY "compiler.mjs" DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 endif()
-
